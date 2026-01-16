@@ -1,7 +1,6 @@
-
 import React from 'react';
 
-export const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+export const Card = ({ children, className = '' }: { children?: React.ReactNode; className?: string }) => (
   <div className={`bg-slate-800 border border-slate-700 rounded-2xl p-6 ${className}`}>
     {children}
   </div>
@@ -15,7 +14,7 @@ export const Button = ({
   disabled = false,
   loading = false
 }: { 
-  children: React.ReactNode; 
+  children?: React.ReactNode; 
   onClick?: () => void; 
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'; 
   className?: string;
@@ -59,7 +58,7 @@ export const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => 
   </select>
 );
 
-export const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }) => {
+export const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean; onClose: () => void; title: string; children?: React.ReactNode }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">

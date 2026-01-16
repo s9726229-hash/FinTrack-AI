@@ -58,6 +58,20 @@ export interface RecurringItem {
   monthOfYear?: number; // 1-12, for YEARLY
 }
 
+// --- V5.2 Budget Feature ---
+export interface BudgetConfig {
+  category: string;
+  limit: number;
+}
+// --------------------------
+
+export interface PurchaseAssessment {
+  score: number; // 0-100 (100 is safe)
+  status: 'SAFE' | 'WARNING' | 'DANGER';
+  analysis: string;
+  impactOnCashFlow: string;
+}
+
 export interface PortfolioSnapshot {
   date: string; // YYYY-MM-DD
   totalAssets: number;
@@ -66,7 +80,6 @@ export interface PortfolioSnapshot {
   assetDistribution: Record<AssetType, number>;
 }
 
-// --- V5.0 New Types ---
 export interface StockPosition {
   symbol: string;     // e.g., 2330
   name: string;       // e.g., 台積電
@@ -90,41 +103,44 @@ export interface StockSnapshot {
   totalUnrealizedPL: number;
   positions: StockPosition[];
 }
-// ---------------------
 
-// --- V5.2 AI Report Types ---
 export interface AIReportData {
   healthScore: number;
-  // healthComment: string; // Removed per user request, merged into summary
   cashFlowForecast: {
-    yearLabel: string; // e.g., "2025 (目前)", "2028 (寬限期後)"
-    monthlyFixedCost: number; // 預估每月固定支出
-    monthlyIncome: number; // 預估總收入
-    debtToIncomeRatio: number; // (支出/收入) * 100
+    yearLabel: string;
+    monthlyFixedCost: number;
+    monthlyIncome: number;
+    debtToIncomeRatio: number;
     isGracePeriodEnded: boolean;
   }[];
   debtAnalysis: {
     name: string;
-    status: string; // e.g. "寬限期中 - 剩餘 18 個月"
+    status: string;
     suggestion: string;
   }[];
   investmentSuggestions: {
     action: 'KEEP' | 'SELL' | 'BUY';
-    target: string; // Stock name
+    target: string;
     reason: string;
   }[];
   summary: string;
 }
-// ---------------------------
+
+export interface GoogleSyncConfig {
+    clientId: string;
+    lastSynced?: number;
+}
 
 export interface LocalStorageData {
   ft_assets: Asset[];
   ft_transactions: Transaction[];
   ft_recurring: RecurringItem[];
-  ft_recurring_executed: Record<string, string[]>; // itemId -> [YYYY-MM, ...]
+  ft_recurring_executed: Record<string, string[]>;
   ft_portfolio_history: PortfolioSnapshot[];
-  ft_stock_snapshots: StockSnapshot[]; // New in V5.0
-  ft_api_key: string; // Restored in V5.1
+  ft_stock_snapshots: StockSnapshot[];
+  ft_budgets: BudgetConfig[]; // New V5.2
+  ft_api_key: string;
+  ft_google_client_id: string; // New Cloud Sync
 }
 
-export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'HISTORY' | 'SETTINGS';
+export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'BUDGET' | 'HISTORY' | 'SETTINGS';

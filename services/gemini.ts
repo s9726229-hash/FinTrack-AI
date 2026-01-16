@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Asset, Transaction, StockPosition, RecurringItem, AssetType, AIReportData, StockSnapshot } from "../types";
+import { Asset, Transaction, StockPosition, RecurringItem, AssetType, AIReportData, StockSnapshot, PurchaseAssessment, BudgetConfig } from "../types";
 import { getApiKey } from "./storage";
 
 const getAI = () => {
@@ -41,7 +41,7 @@ export const parseTransactionInput = async (input: string): Promise<Partial<Tran
       Fields required:
       - date (YYYY-MM-DD), default to today if not specified.
       - amount (number)
-      - category (string) - infer from standard categories like Food(餐飲), Transport(交通), Bills(帳單), etc. Use Traditional Chinese for category.
+      - category (string) - infer from standard categories like Food(餐飲), Transport(交通), Bills(帳單), Family(家庭), etc. Use Traditional Chinese for category.
       - item (string) - brief description in Traditional Chinese.
       - type (EXPENSE or INCOME)
       
@@ -79,7 +79,8 @@ export const batchAnalyzeInvoiceCategories = async (items: string[]): Promise<Re
   try {
     const ai = getAI();
     const prompt = `
-      你是一個財務專家。請分析以下消費項目列表，並為每個項目分配一個最合適的分類（類別必須從以下選取：餐飲、交通、娛樂、購物、居住、帳單、醫療、教育、投資、其他）。
+      你是一個財務專家。請分析以下消費項目列表，並為每個項目分配一個最合適的分類（類別必須從以下選取：餐飲、交通、娛樂、購物、居住、帳單、醫療、教育、家庭、投資、其他）。
+      注意：「家庭」類別適用於家用雜費、給家人的錢、孝親費等。
       
       消費項目列表：
       ${items.join('\n')}
@@ -262,16 +263,15 @@ export const generateFinancialReport = async (
   assets: Asset[], 
   transactions: Transaction[],
   stocks: StockPosition[],
-  recurring: RecurringItem[] = [] // New Parameter V5.2
+  recurring: RecurringItem[] = []
 ): Promise<AIReportData | null> => {
   try {
     const ai = getAI();
     
-    // 1. Precise Pre-calculation (Prevent AI Hallucinations)
+    // 1. Precise Pre-calculation
     let totalAssetsVal = 0;
     let totalLiabilitiesVal = 0;
     
-    // Calculate Monthly Income Capability
     let monthlyFixedIncome = 0;
     recurring.forEach(r => {
         if (r.type === 'INCOME') {
@@ -279,24 +279,15 @@ export const generateFinancialReport = async (
         }
     });
 
-    // Estimate variable income from transactions (last 90 days)
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     const recentIncome = transactions
         .filter(t => t.type === 'INCOME' && new Date(t.date) >= ninetyDaysAgo)
         .reduce((sum, t) => sum + t.amount, 0);
     
-    // We don't want to double count if the user manually added recurring items as transactions
-    // But for simplicity, let's assume 'transactions' are the source of truth for extra income if not tagged as 'Fixed'.
-    // A simple average:
     const avgVariableIncome = Math.round(recentIncome / 3);
-    
-    // Total Estimated Monthly Capacity
-    // If user has no recurring setup, rely solely on transaction history
     const totalEstimatedMonthlyIncome = Math.max(monthlyFixedIncome, avgVariableIncome, monthlyFixedIncome + (avgVariableIncome * 0.5)); 
-    // Heuristic: Fixed + 50% of variable (to be conservative) or just max. Let's send both to AI.
 
-    // Filter and map debt assets for the prompt
     const debtDetails = assets
         .filter(a => a.type === AssetType.DEBT)
         .map(a => {
@@ -452,5 +443,149 @@ export const analyzeRecurringHealth = async (items: RecurringItem[]): Promise<st
     } catch (e) {
         handleAIError(e);
         return "";
+    }
+};
+
+export const analyzeLargeExpenses = async (transactions: Transaction[]): Promise<string> => {
+    try {
+        const ai = getAI();
+        const prompt = `
+            你是個人的財務教練。請分析這份「大額支出」清單（金額較高或異常的消費）。
+            
+            清單：
+            ${JSON.stringify(transactions.map(t => `${t.date} ${t.item} ($${t.amount}) [${t.category}]`))}
+            
+            請提供一段簡短的洞察（繁體中文，200字內）：
+            1. 這些大額支出是「想要」還是「需要」？
+            2. 它們對長期財務目標的潛在影響。
+            3. 給出一句省錢建議。
+        `;
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt
+        });
+        return response.text || "";
+    } catch (e) {
+        handleAIError(e);
+        return "";
+    }
+};
+
+// --- V5.3 Smart Budgeting & Purchase Simulation ---
+
+export const generateBudgetSuggestions = async (
+    transactions: Transaction[],
+    recurring: RecurringItem[],
+    currentBudgets: BudgetConfig[]
+): Promise<BudgetConfig[]> => {
+    try {
+        const ai = getAI();
+        
+        // Summarize last 3 months spending by category
+        const now = new Date();
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(now.getMonth() - 3);
+        
+        const categoryStats: Record<string, number> = {};
+        transactions.forEach(t => {
+            if (t.type === 'EXPENSE' && new Date(t.date) >= threeMonthsAgo) {
+                categoryStats[t.category] = (categoryStats[t.category] || 0) + t.amount;
+            }
+        });
+
+        // Calculate Monthly Average
+        const monthlyAvg: Record<string, number> = {};
+        Object.keys(categoryStats).forEach(cat => {
+            monthlyAvg[cat] = Math.round(categoryStats[cat] / 3);
+        });
+
+        const prompt = `
+            Act as a strict Financial Advisor.
+            
+            Based on the user's past 3-month Average Spending and Fixed Recurring Expenses, suggest a healthy monthly budget limit for each category.
+            
+            **Data**:
+            - Monthly Average Spend (Variable): ${JSON.stringify(monthlyAvg)}
+            - Fixed Recurring Expenses (Monthly): ${JSON.stringify(recurring.filter(r => r.type === 'EXPENSE').map(r => ({ name: r.name, category: r.category, amount: r.amount })))}
+            - Current Set Budgets: ${JSON.stringify(currentBudgets)}
+            
+            **Strategy & Rules**:
+            1. **Reference 50/30/20 Rule**: Needs (50%), Wants (30%), Savings (20%).
+            2. **Benchmark**: Consider standard cost of living in Taiwan (e.g., Food around 8000-15000 TWD).
+            3. **Challenge**: Suggest a limit that is slightly challenging to encourage saving (e.g., 5-10% lower than their average if it seems high), but keep Fixed Expenses fully covered.
+            4. **Exclude Investment**: Do not suggest a budget limit for '投資' (Investment).
+            
+            Return a JSON array of objects: [{ "category": "餐飲", "limit": 12000 }, ...]
+            Only return categories that have spending or recurring items.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        return JSON.parse(response.text || "[]");
+    } catch (e) {
+        handleAIError(e);
+        return [];
+    }
+};
+
+export const evaluatePurchase = async (
+    financialContext: {
+        monthlyIncome: number;
+        monthlyFixedExpenses: number;
+        netWorth: number;
+        currentCash: number;
+    },
+    scenario: string
+): Promise<PurchaseAssessment | null> => {
+    try {
+        const ai = getAI();
+        const prompt = `
+            User wants to simulate a purchase scenario. Evaluate the financial safety.
+            
+            Scenario Input: "${scenario}"
+            
+            User Financial Context:
+            - Estimated Monthly Income: ${financialContext.monthlyIncome}
+            - Fixed Monthly Expenses (Before this purchase): ${financialContext.monthlyFixedExpenses}
+            - Current Liquid Cash: ${financialContext.currentCash}
+            - Net Worth: ${financialContext.netWorth}
+            
+            Task:
+            1. Parse the Scenario: Identify total cost, payment method (one-time vs monthly installment), and any split payments (e.g., down payment + loan).
+            2. Impact Analysis: Calculate impact on Cash (for down payment/one-time) and Monthly Cash Flow (for installments).
+            3. Safety Score: 0-100 (100 = Very Safe).
+            4. Status: SAFE, WARNING, or DANGER.
+            5. Analysis (Traditional Chinese): Explain *why*. Be specific about risks (e.g., "Down payment consumes 80% of cash").
+            
+            Return JSON.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        score: { type: Type.NUMBER },
+                        status: { type: Type.STRING, enum: ['SAFE', 'WARNING', 'DANGER'] },
+                        analysis: { type: Type.STRING },
+                        impactOnCashFlow: { type: Type.STRING }
+                    }
+                }
+            }
+        });
+
+        return JSON.parse(response.text || "null");
+    } catch (e) {
+        handleAIError(e);
+        return null;
     }
 };

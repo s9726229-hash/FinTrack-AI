@@ -8,7 +8,8 @@ import { Recurring } from './views/Recurring';
 import { Settings } from './views/Settings';
 import { HistoryView } from './views/History';
 import { Investments } from './views/Investments';
-import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, Currency } from './types';
+import { Budget } from './views/Budget'; // Import new view
+import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, Currency, BudgetConfig } from './types';
 import * as storage from './services/storage';
 import { CheckCircle2, X } from 'lucide-react';
 
@@ -39,8 +40,6 @@ const calculateLoanBalance = (asset: Asset): number => {
     }
 
     // Phase 2: Repayment (Amortization)
-    // Formula: B = P * [ (1+r)^n - (1+r)^p ] / [ (1+r)^n - 1 ]
-    // r = monthly rate, n = total amortization months, p = months paid (after grace)
     
     const monthlyRate = (annualRate / 100) / 12;
     const totalAmortizationMonths = (totalYears * 12) - graceMonths;
@@ -69,6 +68,7 @@ export default function App() {
   const [recurring, setRecurring] = useState<RecurringItem[]>([]);
   const [recurringExecuted, setRecurringExecuted] = useState<Record<string, string[]>>({});
   const [stockSnapshots, setStockSnapshots] = useState<StockSnapshot[]>([]);
+  const [budgets, setBudgets] = useState<BudgetConfig[]>([]); // New State
   
   // Global Toast State
   const [toast, setToast] = useState<{message: string, count: number} | null>(null);
@@ -80,6 +80,7 @@ export default function App() {
     setRecurring(storage.getRecurring());
     setRecurringExecuted(storage.getRecurringExecuted());
     setStockSnapshots(storage.getStockSnapshots());
+    setBudgets(storage.getBudgets()); // Load Budgets
   };
 
   useEffect(() => {
@@ -94,8 +95,6 @@ export default function App() {
     const newAssets = assets.map(asset => {
         if (asset.type === AssetType.DEBT && asset.startDate && asset.originalAmount) {
             const calculatedBalance = calculateLoanBalance(asset);
-            // If the calculated balance differs significantly from stored amount (e.g. > 100 TWD difference due to rounding)
-            // update it.
             if (Math.abs(calculatedBalance - asset.amount) > 10) {
                 updatedCount++;
                 return { ...asset, amount: calculatedBalance, lastUpdated: Date.now() };
@@ -111,7 +110,7 @@ export default function App() {
         setTimeout(() => setToast(null), 5000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assets.length]); // Check on load (length change usually means load) or we can trigger it explicitly
+  }, [assets.length]); 
 
   // --- Auto-Execute Logic (Check on Load & Data Change) ---
   useEffect(() => {
@@ -128,23 +127,18 @@ export default function App() {
     let executedCount = 0;
 
     recurring.forEach(item => {
-        // 1. Check if already executed for this period
         const itemLogs = newLog[item.id] || [];
         if (itemLogs.includes(currentMonthKey)) return;
 
-        // 2. Check Time Condition
         let shouldExecute = false;
         let targetDate = '';
 
         if (item.frequency === 'MONTHLY') {
-            // If today >= target day
             if (currentDay >= item.dayOfMonth) {
                 shouldExecute = true;
-                // Construct Date: YYYY-MM-DD (Pad with 0)
                 targetDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(item.dayOfMonth).padStart(2, '0')}`;
             }
         } else if (item.frequency === 'YEARLY') {
-            // If current month > target month OR (current month == target month AND today >= target day)
             const targetMonth = item.monthOfYear || 1;
             if (currentMonth > targetMonth || (currentMonth === targetMonth && currentDay >= item.dayOfMonth)) {
                  shouldExecute = true;
@@ -152,11 +146,10 @@ export default function App() {
             }
         }
 
-        // 3. Execute
         if (shouldExecute) {
             const t: Transaction = {
                 id: crypto.randomUUID(),
-                date: targetDate, // Use Scheduled Date, NOT today
+                date: targetDate, 
                 amount: item.amount,
                 category: item.category,
                 item: `[固定] ${item.name}`,
@@ -165,7 +158,6 @@ export default function App() {
                 source: 'MANUAL' 
             };
             newTransactions.push(t);
-            
             if (!newLog[item.id]) newLog[item.id] = [];
             newLog[item.id].push(currentMonthKey);
             executedCount++;
@@ -173,11 +165,6 @@ export default function App() {
     });
 
     if (executedCount > 0) {
-        // Batch Update
-        const updatedTransactions = [...transactions, ...newTransactions]; // Note: using state transactions might be stale in strict effect, but ok for simple implementation
-        // Better: use storage to get latest to be safe, but here we rely on the fact that transactions state is synced
-        
-        // Re-read storage to ensure we don't overwrite if strict mode double-invokes
         const latestTransactions = storage.getTransactions(); 
         const finalTransactions = [...latestTransactions, ...newTransactions];
 
@@ -189,13 +176,9 @@ export default function App() {
 
         setToast({ message: `已自動為您補入 ${executedCount} 筆本月到期的固定帳務`, count: executedCount });
         setTimeout(() => setToast(null), 5000);
-        
-        // Trigger snapshot if assets changed (income/expense affects cash if we tracked it, but currently assets are manual. 
-        // Transactions don't auto-update Asset balance in this app logic yet, so no snapshot needed immediately)
     }
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recurring]); // Run whenever recurring definitions change (e.g. after Import)
+  }, [recurring]);
 
   // --- Snapshot Logic ---
   const checkAndTakeSnapshot = () => {
@@ -213,7 +196,7 @@ export default function App() {
 
   useEffect(() => {
      checkAndTakeSnapshot();
-  }, [assets]); // Check snapshot when assets change
+  }, [assets]); 
 
   const takeSnapshot = (currentAssets: Asset[]) => {
      let assetsVal = 0;
@@ -267,11 +250,8 @@ export default function App() {
     storage.saveAssets(updated);
   };
 
-  // V5.0 Special Handler: Auto Update Stock Asset when Inventory is uploaded
   const handleUpdateStockAssetValue = (newTotalValue: number) => {
-      // Find the first asset of type STOCK
       const stockAsset = assets.find(a => a.type === AssetType.STOCK);
-      
       if (stockAsset) {
           const updatedAsset: Asset = {
               ...stockAsset,
@@ -281,7 +261,6 @@ export default function App() {
           updateAsset(updatedAsset);
           setToast({ message: `已自動同步資產：「${stockAsset.name}」價值更新為 $${newTotalValue.toLocaleString()}`, count: 1 });
       } else {
-          // If no stock asset exists, create one
           const newAsset: Asset = {
               id: crypto.randomUUID(),
               name: "股票投資帳戶 (Auto)",
@@ -327,7 +306,6 @@ export default function App() {
   };
 
   const executeRecurring = (item: RecurringItem, date: string) => {
-     // Legacy support
   };
 
   const deleteRecurring = (id: string) => {
@@ -343,11 +321,20 @@ export default function App() {
       storage.saveStockSnapshots(updated);
   };
 
+  // Budget Handlers
+  const updateBudgets = (newBudgets: BudgetConfig[]) => {
+      setBudgets(newBudgets);
+      storage.saveBudgets(newBudgets);
+      setToast({ message: '預算設定已更新', count: 1 });
+      setTimeout(() => setToast(null), 3000);
+  };
+
   return (
     <Layout currentView={view} onChangeView={setView}>
       {view === 'DASHBOARD' && <Dashboard assets={assets} transactions={transactions} stockSnapshots={stockSnapshots} recurring={recurring} />}
       {view === 'ASSETS' && <Assets assets={assets} onAdd={addAsset} onUpdate={updateAsset} onDelete={deleteAsset} />}
       {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onDelete={deleteTransaction} onBulkAdd={bulkAddTransactions} />}
+      {view === 'BUDGET' && <Budget transactions={transactions} budgets={budgets} onUpdateBudgets={updateBudgets} />}
       {view === 'RECURRING' && <Recurring items={recurring} executedLog={recurringExecuted} onAdd={addRecurring} onExecute={executeRecurring} onDelete={deleteRecurring} />}
       {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} onAddSnapshot={addStockSnapshot} onUpdateAssetValue={handleUpdateStockAssetValue} onBulkAddTransactions={bulkAddTransactions} />}
       {view === 'HISTORY' && <HistoryView />}

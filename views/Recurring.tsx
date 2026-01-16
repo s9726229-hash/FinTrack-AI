@@ -27,7 +27,8 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
   '手機': '帳單', '網路': '帳單', '電信': '帳單', '信用卡': '帳單',
   '薪水': '薪資', '薪資': '薪資', '獎金': '獎金',
   '股息': '股息', '配息': '股息',
-  '捷運': '交通', '月票': '交通', '車貸': '交通'
+  '捷運': '交通', '月票': '交通', '車貸': '交通',
+  '老婆': '家庭', '家用': '家庭', '雜費': '家庭', '孝親': '家庭', '小孩': '家庭', '學費': '教育'
 };
 
 export const Recurring: React.FC<RecurringProps> = ({ items, executedLog, onAdd, onExecute, onDelete }) => {
@@ -74,7 +75,7 @@ export const Recurring: React.FC<RecurringProps> = ({ items, executedLog, onAdd,
         frequency: 'MONTHLY', 
         dayOfMonth: 1, 
         monthOfYear: currentMonth,
-        category: '餐飲' 
+        category: '家庭' 
     });
     setIsModalOpen(true);
   };

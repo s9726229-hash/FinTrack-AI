@@ -5,7 +5,8 @@ export const STORAGE_KEYS = {
   RECURRING: 'ft_recurring',
   RECURRING_EXECUTED: 'ft_recurring_executed',
   HISTORY: 'ft_portfolio_history',
-  STOCK_SNAPSHOTS: 'ft_stock_snapshots', // New V5.0
+  STOCK_SNAPSHOTS: 'ft_stock_snapshots',
+  BUDGETS: 'ft_budgets', // New V5.2
 };
 
 export const EXCHANGE_RATES_DEFAULT = {
@@ -15,7 +16,7 @@ export const EXCHANGE_RATES_DEFAULT = {
 };
 
 export const EXPENSE_CATEGORIES = [
-  '餐飲', '交通', '娛樂', '購物', '居住', '帳單', '醫療', '教育', '投資', '其他'
+  '餐飲', '交通', '娛樂', '購物', '居住', '帳單', '醫療', '教育', '家庭', '投資', '其他'
 ];
 
 export const INCOME_CATEGORIES = [
@@ -25,7 +26,7 @@ export const INCOME_CATEGORIES = [
 export const ASSET_TYPE_COLORS: Record<string, string> = {
   CASH: '#10b981', // Emerald
   STOCK: '#8b5cf6', // Violet
-  FUND: '#ec4899', // Pink (Added)
+  FUND: '#ec4899', // Pink
   REAL_ESTATE: '#06b6d4', // Cyan
   CRYPTO: '#f59e0b', // Amber
   DEBT: '#ef4444', // Red
@@ -35,7 +36,7 @@ export const ASSET_TYPE_COLORS: Record<string, string> = {
 export const ASSET_TYPE_LABELS: Record<string, string> = {
   CASH: '現金',
   STOCK: '股票',
-  FUND: '基金', // Added
+  FUND: '基金',
   REAL_ESTATE: '房地產',
   CRYPTO: '加密貨幣',
   DEBT: '負債',
