@@ -1,130 +1,114 @@
 
 import React from 'react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench } from 'lucide-react';
 import { Card } from '../components/ui';
-import { Code2, GitCommit, CheckCircle2, Layers, Archive } from 'lucide-react';
+
+const logs = [
+  {
+    build: "5.3.2",
+    date: "2024-07-29",
+    title: "建構錯誤修正與程式碼一致性優化",
+    status: "verifying",
+    changes: [
+      {
+        icon: Bug,
+        color: 'text-rose-400',
+        text: "**建構錯誤修正 (Build Fix)**: 解決了 `views/History.tsx` 中因不正確的模組路徑造成的 TypeScript 編譯錯誤。"
+      },
+      {
+        icon: FlaskConical,
+        color: 'text-sky-400',
+        text: "**程式碼一致性**: 將 AI 調校日誌頁面的卡片元件重構為使用全域共用的 `Card` 元件，提升了程式碼的可維護性與視覺一致性。"
+      },
+    ]
+  },
+  {
+    build: "5.3.1",
+    date: "2024-07-28",
+    title: "程式碼重構與錯誤修正",
+    status: "verified",
+    changes: [
+      {
+        icon: FlaskConical,
+        color: 'text-sky-400',
+        text: "**程式碼重構 (DRY)**: 統一所有貸款餘額計算邏輯至 `services/finance.ts`，消除重複程式碼並確保計算一致性。"
+      },
+      {
+        icon: Bug,
+        color: 'text-rose-400',
+        text: "**錯誤修正 (Bug Fix)**: 修正編輯貸款資產時，餘額不會立即更新的問題。現在任何變更都會即時反應。"
+      },
+      {
+        icon: Wrench,
+        color: 'text-amber-400',
+        text: "**功能補全**: 為 `executeRecurring` 函式補上完整邏輯，消除無效作用的程式碼。"
+      },
+    ]
+  },
+];
+
+const StatusBadge = ({ status }: { status: string }) => {
+  if (status === 'verifying') {
+    return (
+      <span className="flex items-center gap-1.5 text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-full">
+        <Clock size={12} />
+        驗證中 (Verifying)
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full">
+      <CheckCircle2 size={12} />
+      驗證通過 (Verified)
+    </span>
+  );
+};
 
 export const HistoryView: React.FC = () => {
-  const versions = [
-    {
-      tag: "V5.3 Lite",
-      status: "current",
-      title: "FinTrack AI - 輕量化智慧財務管家",
-      features: [
-        "核心優化：移除繁雜的影像辨識與發票匯入功能，專注於流暢的記帳與資產追蹤體驗。",
-        "AI 語音記帳：整合 Web Speech API 與 Gemini NLP，點擊懸浮按鈕即可口語記帳。",
-        "雲端同步中心：整合 Google Drive API，實現私有雲端加密備份與跨裝置還原。",
-        "智慧預算防禦：新增「購買模擬器」評估消費衝擊、「異常大額雷達」監控消費。",
-        "資產貸款引擎：支援寬限期設定、年金法本息攤還試算，自動更新每月剩餘貸款本金。"
-      ]
-    },
-    {
-      tag: "V5.2",
-      status: "past",
-      title: "雲端同步與預算防禦版",
-      features: [
-        "新增：Google Drive 雲端同步",
-        "新增：AI 預算編列與「購買模擬器」",
-        "優化：貸款資產支援「寬限期」與「本息攤還」自動試算邏輯"
-      ]
-    }
-  ];
-
-  const featuresList = [
-      {
-          category: "AI 智能核心 (Gemini 2.5/3.0)",
-          items: [
-              "NLP 語意記帳 (語音/文字轉交易)",
-              "Financial Advisor (資產壓力測試報告)",
-              "Purchase Simulator (購買行為現金流模擬)"
-          ]
-      },
-      {
-          category: "資產與帳務管理",
-          items: [
-              "多幣別資產管理 (自動匯率換算)",
-              "智慧貸款攤提 (寬限期/本息平均)",
-              "固定收支自動化 (月繳/年繳自動入帳)",
-              "預算執行率監控與警示"
-          ]
-      },
-      {
-          category: "系統架構與安全",
-          items: [
-              "PWA 漸進式網頁 (支援手機安裝)",
-              "Local-First 資料存儲 (IndexedDB/LocalStorage)",
-              "Google Drive 私有雲端備份",
-              "React 19 + TypeScript 高效能渲染"
-          ]
-      }
-  ];
-
   return (
     <div className="space-y-8 animate-fade-in max-w-5xl mx-auto pb-20">
-      <div className="bg-gradient-to-r from-primary/20 to-slate-800 p-8 rounded-2xl border border-primary/20 shadow-2xl relative overflow-hidden">
-         <div className="absolute right-0 top-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="bg-gradient-to-r from-cyan-500/10 to-slate-800 p-8 rounded-2xl border border-cyan-500/20 shadow-2xl relative overflow-hidden">
+         <div className="absolute right-0 top-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
          <h2 className="text-3xl font-bold text-white flex items-center gap-3 relative z-10">
-            <Code2 className="text-primary"/> 系統日誌與功能總覽
+            <Bot className="text-cyan-400"/> AI 調校日誌
          </h2>
-         <p className="text-slate-300 mt-2 relative z-10">FinTrack AI V5.3 Lite 輕量穩定版。</p>
+         <p className="text-slate-300 mt-2 relative z-10">追蹤 AI 開發助理對此應用程式的每一次調整與優化紀錄。</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <div className="lg:col-span-2 space-y-6">
-             <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl">
-                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 border-b border-slate-700 pb-2">
-                    <GitCommit className="text-cyan-400"/> 版本演進
-                 </h3>
-                 <div className="relative pl-2 space-y-8 border-l border-slate-700 ml-2">
-                    {versions.map((ver, idx) => (
-                        <div key={idx} className="relative pl-6 group">
-                            <div className={`absolute -left-[5px] top-1.5 w-3 h-3 rounded-full border-2 ${ver.status === 'current' ? 'border-primary bg-primary shadow-[0_0_8px_rgba(139,92,246,0.8)]' : 'border-slate-500 bg-slate-800'}`}></div>
-                            <div>
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${ver.status === 'current' ? 'bg-primary text-white' : 'bg-slate-700 text-slate-400'}`}>{ver.tag}</span>
-                                <h4 className="text-white font-bold text-base mt-1">{ver.title}</h4>
-                                <ul className="mt-2 space-y-2">
-                                    {ver.features.map((f, i) => (
-                                        <li key={i} className="text-slate-300 text-sm flex items-start gap-2 leading-relaxed">
-                                            <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-500 shrink-0"></span> {f}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    ))}
-                 </div>
-             </div>
-         </div>
-
-         <div className="lg:col-span-1 space-y-6">
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Layers className="text-emerald-400"/> 功能模組矩陣
-                </h3>
-                <div className="space-y-4">
-                    {featuresList.map((cat, idx) => (
-                        <div key={idx}>
-                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{cat.category}</h4>
-                            <ul className="space-y-1.5">
-                                {cat.items.map((item, i) => (
-                                    <li key={i} className="text-sm text-slate-300 flex items-center gap-2">
-                                        <CheckCircle2 size={12} className="text-primary/70"/> {item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
+      <div className="relative pl-4 border-l-2 border-slate-700 ml-4">
+        {logs.map((log, index) => (
+          <div key={index} className="mb-10 pl-8 relative">
+            <div className="absolute -left-[11px] top-1 w-5 h-5 bg-slate-800 border-4 border-primary rounded-full ring-8 ring-slate-900"></div>
+            
+            <Card className="shadow-lg hover:border-slate-600 transition-colors">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded-md border border-slate-700">
+                          Build {log.build}
+                        </span>
+                        <span className="text-xs text-slate-400">{log.date}</span>
+                    </div>
+                    <StatusBadge status={log.status} />
                 </div>
-            </div>
-
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-               <h3 className="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                  <Archive size={16}/> 版本說明
-               </h3>
-               <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                  本版本 (V5.3 Lite) 專注於程式碼輕量化，已移除部分視覺辨識與匯入功能以提升載入速度與維護性。
-               </p>
-            </div>
-         </div>
+                
+                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                   <GitCommit className="text-primary/70" size={20}/> {log.title}
+                </h3>
+                
+                <ul className="mt-4 space-y-3 list-none">
+                    {log.changes.map((change, i) => {
+                        const Icon = change.icon;
+                        return (
+                            <li key={i} className="flex items-start gap-3 p-3 bg-slate-900/50 rounded-lg border border-slate-700/50">
+                                <Icon size={20} className={`${change.color} mt-0.5 shrink-0`} />
+                                <p className="text-slate-300 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: change.text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>') }} />
+                            </li>
+                        );
+                    })}
+                </ul>
+            </Card>
+          </div>
+        ))}
       </div>
     </div>
   );
