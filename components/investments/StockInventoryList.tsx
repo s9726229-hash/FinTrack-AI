@@ -23,7 +23,7 @@ export const StockInventoryList: React.FC<StockInventoryListProps> = ({ currentS
             <div className="py-20 text-center flex flex-col items-center justify-center text-slate-500">
                 <Camera size={48} className="mb-4 opacity-20"/>
                 <p className="text-sm">尚無庫存資料</p>
-                <p className="text-xs opacity-60 mt-1">請點擊上方「更新庫存」按鈕上傳截圖</p>
+                <p className="text-xs opacity-60 mt-1">目前暫無數據展示</p>
             </div>
         ) : (
             <>
