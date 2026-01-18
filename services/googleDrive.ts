@@ -23,12 +23,15 @@ export const initGapi = () => {
     return new Promise<void>((resolve, reject) => {
         if (window.gapi) {
             window.gapi.load('client', async () => {
-                await window.gapi.client.init({
-                    // apiKey: API_KEY, // Not needed for Drive file scope with just token
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                });
-                gapiInited = true;
-                resolve();
+                try {
+                    await window.gapi.client.init({
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                    });
+                    gapiInited = true;
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
             });
         } else {
             reject("Google API script not loaded");
@@ -57,6 +60,17 @@ export const initGis = (clientId: string) => {
     });
 };
 
+// Check if we already have an active token (helps with remounting components)
+export const checkConnection = (): boolean => {
+    if (accessToken) return true;
+    const token = window.gapi?.client?.getToken();
+    if (token && token.access_token) {
+        accessToken = token.access_token;
+        return true;
+    }
+    return false;
+};
+
 // Trigger Login Flow
 export const handleAuthClick = () => {
     return new Promise<string>((resolve, reject) => {
@@ -65,7 +79,6 @@ export const handleAuthClick = () => {
             return;
         }
 
-        // Override callback for this specific request to capture resolution
         tokenClient.callback = (resp: any) => {
             if (resp.error) {
                 reject(resp);
@@ -75,11 +88,8 @@ export const handleAuthClick = () => {
         };
 
         if (accessToken === null) {
-            // Prompt the user to select a Google Account and ask for consent to share their data
-            // when no access token is available.
             tokenClient.requestAccessToken({ prompt: 'consent' });
         } else {
-            // Skip display of account chooser and consent dialog for an existing session.
             tokenClient.requestAccessToken({ prompt: '' });
         }
     });
@@ -87,7 +97,6 @@ export const handleAuthClick = () => {
 
 // --- Drive Operations ---
 
-// 1. Find existing backup file (Internal)
 const findBackupFile = async () => {
     try {
         const response = await window.gapi.client.drive.files.list({
@@ -106,17 +115,19 @@ const findBackupFile = async () => {
     }
 };
 
-// New: Get Backup Metadata (Public) for Auto-Discovery
 export const getBackupMetadata = async (): Promise<{id: string, modifiedTime: string} | null> => {
-    if (!accessToken) throw new Error("Not authenticated");
-    const file = await findBackupFile();
-    if (file) {
-        return { id: file.id, modifiedTime: file.modifiedTime };
+    if (!accessToken) return null;
+    try {
+        const file = await findBackupFile();
+        if (file) {
+            return { id: file.id, modifiedTime: file.modifiedTime };
+        }
+    } catch (e) {
+        return null;
     }
     return null;
 };
 
-// 2. Upload (Create or Update)
 export const uploadToDrive = async (): Promise<void> => {
     if (!accessToken) throw new Error("Not authenticated");
 
@@ -140,7 +151,6 @@ export const uploadToDrive = async (): Promise<void> => {
 
     try {
         if (fileId) {
-            // Update existing file
             await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`, {
                 method: 'PATCH',
                 headers: {
@@ -150,7 +160,6 @@ export const uploadToDrive = async (): Promise<void> => {
                 body: multipartRequestBody
             });
         } else {
-            // Create new file
             await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: 'POST',
                 headers: {
@@ -166,7 +175,6 @@ export const uploadToDrive = async (): Promise<void> => {
     }
 };
 
-// 3. Download (Restore)
 export const downloadFromDrive = async (): Promise<boolean> => {
     if (!accessToken) throw new Error("Not authenticated");
 
@@ -183,7 +191,6 @@ export const downloadFromDrive = async (): Promise<boolean> => {
             alt: 'media'
         });
         
-        // gapi client returns body in result
         const jsonString = typeof response.body === 'string' ? response.body : JSON.stringify(response.result);
         return importData(jsonString);
     } catch (e) {
