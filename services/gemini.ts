@@ -2,6 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Transaction, StockPosition, RecurringItem, AssetType, AIReportData, Asset, StockSnapshot, PurchaseAssessment, BudgetConfig } from "../types";
 import { getApiKey } from "./storage";
+import { EXPENSE_CATEGORIES } from '../constants';
 
 // Helper to get AI instance dynamically with the latest key
 const getAI = () => {
@@ -71,6 +72,41 @@ export const parseTransactionInput = async (input: string): Promise<Partial<Tran
     return null;
   }
 };
+
+/**
+ * Determines the most likely expense category for a transaction based on store name and items.
+ */
+export const categorizeExpense = async (storeName: string, items: string[]): Promise<string> => {
+    const defaultCategory = '購物';
+    try {
+        const ai = getAI();
+        const context = `${storeName} - ${items.slice(0, 3).join(', ')}`;
+        
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `
+                Based on the store name and item description, determine the most appropriate expense category.
+                Please choose ONLY ONE category from the following list: [${EXPENSE_CATEGORIES.join(', ')}].
+                Return only the category name as a single string.
+
+                Context: "${context}"
+            `,
+        });
+
+        const category = response.text?.trim();
+
+        if (category && EXPENSE_CATEGORIES.includes(category)) {
+            return category;
+        }
+        
+        return defaultCategory; 
+
+    } catch (error) {
+        console.error("Gemini Categorization Error:", error);
+        return defaultCategory;
+    }
+};
+
 
 /**
  * 財務壓力測試與建議報告

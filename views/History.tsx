@@ -1,14 +1,37 @@
 
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
   {
+    build: "5.4.1",
+    date: "2026-01-18",
+    title: "AI 智慧分類準確度提升 (提示工程優化)",
+    status: "verifying",
+    changes: [
+      {
+        icon: Bug,
+        color: 'text-rose-400',
+        text: "**問題修正**: 修正了發票匯入時 AI 分類不精準的問題。例如，飲料店被錯誤歸類為「購物」。"
+      },
+      {
+        icon: BrainCircuit,
+        color: 'text-sky-400',
+        text: "**提示工程 (Prompt Engineering)**: 建立專屬的分類 AI 函式，並在指令中明確提供預設的支出類別清單，將 AI 的『開放式猜測』轉變為『有標準選項的選擇題』。"
+      },
+       {
+        icon: Wrench,
+        color: 'text-amber-400',
+        text: "**上下文優化**: 現在會將發票的前 3 個品項名稱一同提供給 AI，以增加判斷線索，提升在複合式店家消費時的分類準確性。"
+      },
+    ]
+  },
+  {
     build: "5.4.0",
     date: "2026-01-18",
     title: "新功能：電子發票 CSV 匯入",
-    status: "verifying",
+    status: "verified",
     changes: [
       {
         icon: FileUp,

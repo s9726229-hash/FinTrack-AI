@@ -1,7 +1,7 @@
 
 {
   "name": "FinTrack AI",
-  "description": "全方位的 AI 個人財務追蹤器，V5.4 新增電子發票 CSV 匯入功能，自動分類、省時省力。",
+  "description": "全方位的 AI 個人財務追蹤器，V5.4.1 顯著提升發票 AI 分類準確度，匯入更智慧。",
   "requestFramePermissions": [
     "microphone"
   ]

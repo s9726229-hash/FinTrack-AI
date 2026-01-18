@@ -5,7 +5,7 @@ import {
   ScrollText, Plus, ChevronDown, ChevronUp, PieChart, UploadCloud, FileCheck2, Loader2, AlertTriangle
 } from 'lucide-react';
 import { getApiKey } from '../services/storage';
-import { parseTransactionInput } from '../services/gemini';
+import { categorizeExpense } from '../services/gemini';
 import { Button, Modal } from '../components/ui';
 
 // Import New Refactored Components
@@ -189,10 +189,7 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
         .map(async (p): Promise<Transaction> => {
             let category = '購物'; // Default
             if (hasApiKey) {
-                const aiResult = await parseTransactionInput(`${p.storeName} ${p.items[0]}`);
-                if (aiResult?.category) {
-                    category = aiResult.category;
-                }
+                category = await categorizeExpense(p.storeName, p.items);
             }
 
             return {

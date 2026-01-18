@@ -40,8 +40,8 @@ export const GuideView: React.FC = () => {
         <FeatureSection title="V5.4 最新功能" color="text-amber-400">
             <FeatureItem 
                 icon={UploadCloud} 
-                title="電子發票 CSV 匯入" 
-                description="從財政部平台下載發票 CSV 檔後，可一鍵匯入所有交易。系統將自動排除重複紀錄，並利用 AI 智慧判斷消費類別。" 
+                title="電子發票 CSV 匯入 (V5.4.1 強化)" 
+                description="從財政部平台下載發票 CSV 檔後，可一鍵匯入所有交易。系統將自動排除重複紀錄，並利用優化後的 AI 智慧判斷消費類別，準確度大幅提升。" 
             />
         </FeatureSection>
         
