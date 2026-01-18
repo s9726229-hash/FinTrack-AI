@@ -13,7 +13,7 @@ const getAI = () => {
 };
 
 // Helper: Clean JSON string (remove markdown code blocks)
-const cleanJsonString = (text: string): string => {
+const cleanJsonString = (text: string | undefined | null): string => {
     if (!text) return "[]";
     // Remove ```json and ``` wrapping if present
     let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -40,6 +40,7 @@ const VISION_SAFETY_SETTINGS = [
     { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold: HarmBlockThreshold.BLOCK_NONE }
 ];
 
 /**
@@ -72,7 +73,7 @@ export const parseTransactionInput = async (input: string): Promise<Partial<Tran
       }
     });
 
-    const cleaned = cleanJsonString(response.text || "null");
+    const cleaned = cleanJsonString(response.text);
     return JSON.parse(cleaned);
   } catch (error) {
     console.error("Gemini Error:", error);
@@ -119,7 +120,7 @@ export const analyzeStockInventory = async (base64Data: string, mimeType: string
     });
 
     console.debug("Gemini Vision Response:", response.text); // For debugging
-    const cleaned = cleanJsonString(response.text || "[]");
+    const cleaned = cleanJsonString(response.text);
     return JSON.parse(cleaned);
   } catch (error) {
     console.error("Vision Error:", error);
@@ -179,7 +180,7 @@ export const generateFinancialReport = async (
       config: { responseMimeType: "application/json" }
     });
 
-    const cleaned = cleanJsonString(response.text || "null");
+    const cleaned = cleanJsonString(response.text);
     return JSON.parse(cleaned);
   } catch (error) {
     return null;
@@ -212,7 +213,7 @@ export const evaluatePurchase = async (ctx: any, scenario: string): Promise<Purc
     contents: `評估購買行為。情境：${scenario}。背景：${JSON.stringify(ctx)}`,
     config: { responseMimeType: "application/json" }
   });
-  const cleaned = cleanJsonString(response.text || "null");
+  const cleaned = cleanJsonString(response.text);
   return JSON.parse(cleaned);
 };
 
@@ -232,7 +233,7 @@ export const analyzeStockRealizedPL = async (base64Data: string, mimeType: strin
                 safetySettings: VISION_SAFETY_SETTINGS // Apply safety settings here too
             }
         });
-        const cleaned = cleanJsonString(response.text || "[]");
+        const cleaned = cleanJsonString(response.text);
         return JSON.parse(cleaned);
     } catch (error) {
         console.error("Analyze PL Error", error);
@@ -267,6 +268,6 @@ export const generateBudgetSuggestions = async (transactions: Transaction[], rec
             }
         }
     });
-    const cleaned = cleanJsonString(response.text || "[]");
+    const cleaned = cleanJsonString(response.text);
     return JSON.parse(cleaned);
 };
