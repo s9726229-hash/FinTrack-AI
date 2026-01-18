@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card } from '../ui';
+import { Card } from '../components/ui';
 import { Code2, GitCommit, CheckCircle2, Layers, Archive } from 'lucide-react';
 
 export const HistoryView: React.FC = () => {
