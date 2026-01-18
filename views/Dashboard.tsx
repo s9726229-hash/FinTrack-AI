@@ -63,7 +63,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
   // SVG Configuration for Health Score
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = reportData ? circumference - (reportData.healthScore / 100) * circumference : circumference;
+  // Fallback to 0 if healthScore is undefined/NaN
+  const score = reportData?.healthScore || 0;
+  const strokeDashoffset = reportData ? circumference - (score / 100) * circumference : circumference;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -143,7 +145,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
           
           <div className="min-h-[200px]">
             {reportData ? (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-6 animate-fade-in">
                   
                   {/* Health Score & Summary */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -158,7 +160,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                                       cx="50" 
                                       cy="50" 
                                       r={radius} 
-                                      stroke={reportData.healthScore > 70 ? "#10b981" : reportData.healthScore > 50 ? "#f59e0b" : "#ef4444"} 
+                                      stroke={score > 70 ? "#10b981" : score > 50 ? "#f59e0b" : "#ef4444"} 
                                       strokeWidth="8" 
                                       fill="none" 
                                       strokeDasharray={circumference} 
@@ -168,11 +170,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                                   />
                               </svg>
                               <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                  <span className="text-3xl font-bold text-white">{reportData.healthScore}</span>
+                                  <span className="text-3xl font-bold text-white">{score}</span>
                                   <span className="text-[10px] text-slate-500 uppercase font-bold">Health</span>
                               </div>
                           </div>
-                          {/* Description moved to summary per user request */}
                       </div>
                       <div className="col-span-1 md:col-span-3 bg-slate-900/60 p-5 rounded-xl border border-slate-700">
                           <h4 className="text-sm font-bold text-cyan-400 mb-2 flex items-center gap-2">
@@ -228,14 +229,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                       </div>
                   </div>
 
-                  {/* Strategy Cards */}
+                  {/* Strategy Cards - Equal Height */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Investment Strategy */}
-                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700">
+                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700 h-full flex flex-col">
                           <h4 className="text-sm font-bold text-violet-400 mb-3 flex items-center gap-2">
                               <Briefcase size={16}/> 投資組合調整建議
                           </h4>
-                          <div className="space-y-3">
+                          <div className="space-y-3 flex-1">
                               {reportData.investmentSuggestions.map((sug, idx) => (
                                   <div key={idx} className="flex gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
                                       <div className={`
@@ -250,16 +251,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                                       </div>
                                   </div>
                               ))}
-                              {reportData.investmentSuggestions.length === 0 && <p className="text-xs text-slate-500">目前投資組合穩健，暫無調整建議。</p>}
+                              {reportData.investmentSuggestions.length === 0 && (
+                                  <div className="text-center py-6 text-slate-500 text-xs">
+                                      目前投資組合穩健，暫無具體調整建議。
+                                  </div>
+                              )}
                           </div>
                       </div>
 
                       {/* Debt Analysis */}
-                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700">
+                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700 h-full flex flex-col">
                           <h4 className="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2">
                               <AlertCircle size={16}/> 負債管理建議
                           </h4>
-                          <div className="space-y-3">
+                          <div className="space-y-3 flex-1">
                               {reportData.debtAnalysis.map((debt, idx) => (
                                   <div key={idx} className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
                                       <div className="flex justify-between items-start mb-1">
@@ -269,7 +274,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                                       <p className="text-xs text-slate-400">{debt.suggestion}</p>
                                   </div>
                               ))}
-                              {reportData.debtAnalysis.length === 0 && <p className="text-xs text-slate-500">目前無重大負債風險。</p>}
+                              {reportData.debtAnalysis.length === 0 && (
+                                  <div className="text-center py-6 text-slate-500 text-xs">
+                                      目前無重大負債風險，請繼續保持。
+                                  </div>
+                              )}
                           </div>
                       </div>
                   </div>
