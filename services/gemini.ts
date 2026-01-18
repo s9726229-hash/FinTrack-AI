@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Transaction, StockPosition, RecurringItem, AssetType, AIReportData, Asset, StockSnapshot, PurchaseAssessment, BudgetConfig } from "../types";
 import { getApiKey } from "./storage";
 
@@ -35,13 +35,14 @@ const cleanJsonString = (text: string | undefined | null): string => {
 };
 
 // Common Safety Settings to prevent OCR blocking
+// 使用字串字面量而非 Enum，確保在所有環境 (含 GitHub Pages) 都能正確傳遞參數
 const VISION_SAFETY_SETTINGS = [
-    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    { category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold: HarmBlockThreshold.BLOCK_NONE }
-];
+    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' }
+] as any;
 
 /**
  * 分析語音或文字輸入的交易資訊
@@ -92,12 +93,26 @@ export const analyzeStockInventory = async (base64Data: string, mimeType: string
       contents: {
         parts: [
           { inlineData: { data: base64Data, mimeType } },
-          { text: "提取台灣股票庫存資料。輸出欄位：symbol(代號), name(名稱), shares(股數), cost(成本), currentPrice(現價), marketValue(市值), unrealizedPL(損益), returnRate(報酬率%)。請支援通用券商格式，若無法辨識請填 0。" }
+          { text: `
+            分析這張台灣證券 App 的庫存截圖 (深色模式)。
+            資料通常呈現列表狀，每一列包含：名稱(Name), 股數(Shares), 均價/成本(Cost), 市價(Current Price), 市值(Market Value), 損益(Unrealized P/L)。
+
+            請提取並輸出 JSON 陣列，每個物件包含：
+            - symbol: 股票代號 (若無顯示，請嘗試根據股名推測，例如 '台積電' -> '2330'，若無法推測則留空)
+            - name: 股票名稱 (例如：元大台灣50、富邦科技)
+            - shares: 股數 (數字，請移除逗號，例如 '2,616' -> 2616)
+            - cost: 平均成本 (數字)
+            - currentPrice: 現價 (數字)
+            - marketValue: 市值 (數字，移除逗號)
+            - unrealizedPL: 試算損益 (數字，移除逗號。注意：台灣股市中，紅色通常代表獲利/正值，綠色代表虧損/負值。若有負號也請保留)
+            - returnRate: 報酬率 (數字，不含 % 符號)
+
+            若欄位無法辨識，請填 0。請忽略匯總行 (如：總庫存、總市值)。
+          ` }
         ]
       },
       config: {
         responseMimeType: "application/json",
-        // Add Safety Settings to prevent OCR false positives
         safetySettings: VISION_SAFETY_SETTINGS,
         responseSchema: {
           type: Type.ARRAY,
@@ -113,13 +128,13 @@ export const analyzeStockInventory = async (base64Data: string, mimeType: string
               unrealizedPL: { type: Type.NUMBER },
               returnRate: { type: Type.NUMBER }
             },
-            required: ['symbol', 'name', 'shares', 'marketValue']
+            required: ['name', 'shares', 'marketValue']
           }
         }
       }
     });
 
-    console.debug("Gemini Vision Response:", response.text); // For debugging
+    console.debug("Gemini Vision Response (Inventory):", response.text);
     const cleaned = cleanJsonString(response.text);
     return JSON.parse(cleaned);
   } catch (error) {
@@ -135,10 +150,11 @@ export const enrichStockDataWithDividends = async (positions: StockPosition[]): 
   if (positions.length === 0) return positions;
   try {
     const ai = getAI();
-    const symbols = positions.map(p => `${p.symbol} ${p.name}`).join(', ');
+    // 取前 5 檔股票搜尋即可，避免 Prompt 過長
+    const symbols = positions.slice(0, 5).map(p => `${p.symbol} ${p.name}`).join(', ');
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: `搜尋並回傳 JSON 格式的台灣股票股利資訊：${symbols}。包含 symbol, dividendAmount, dividendYield(%), dividendFrequency。`,
+      contents: `搜尋並回傳 JSON 格式的台灣股票股利資訊：${symbols}。包含 symbol, dividendAmount (現金股利), dividendYield (殖利率%), dividendFrequency (配息頻率，如：年配、季配)。`,
       config: {
         tools: [{ googleSearch: {} }]
       }
@@ -146,10 +162,17 @@ export const enrichStockDataWithDividends = async (positions: StockPosition[]): 
 
     const text = response.text || "[]";
     const cleaned = cleanJsonString(text);
-    const dividendData = JSON.parse(cleaned);
+    
+    let dividendData: any[] = [];
+    try {
+        dividendData = JSON.parse(cleaned);
+        if (!Array.isArray(dividendData)) dividendData = [];
+    } catch (e) {
+        console.warn("Dividend parse failed");
+    }
 
     return positions.map(p => {
-      const info = Array.isArray(dividendData) ? dividendData.find((d: any) => d.symbol?.includes(p.symbol)) : null;
+      const info = dividendData.find((d: any) => (d.symbol && p.symbol && d.symbol.includes(p.symbol)) || (d.symbol && p.name && d.symbol.includes(p.name)));
       return info ? { ...p, dividendAmount: info.dividendAmount, dividendYield: info.dividendYield, dividendFrequency: info.dividendFrequency } : p;
     });
   } catch (error) {
@@ -225,14 +248,48 @@ export const analyzeStockRealizedPL = async (base64Data: string, mimeType: strin
             contents: {
                 parts: [
                     { inlineData: { data: base64Data, mimeType } },
-                    { text: "識別截圖中的已實現損益。回傳 Transaction 陣列 JSON。" }
+                    { text: `
+                        分析這張台灣股市 App 的「已實現損益」明細截圖。
+                        
+                        目標：提取每一筆有「損益金額」的交易。
+                        邏輯規則：
+                        1. 忽略單純「買進」但沒有已實現損益的紀錄 (該欄位可能顯示 --)。
+                        2. 專注於「賣出」或「現沖」等產生損益的行為。
+                        3. 台灣股市顏色慣例：紅色為獲利 (Profit/Positive)，綠色為虧損 (Loss/Negative)。
+                        
+                        請回傳 JSON 陣列 (Transaction Object)：
+                        - date: 日期，格式 YYYY-MM-DD (截圖中可能是 2026/01/02，請照實提取)。
+                        - item: 股票名稱 + 交易動作 (例如：台新永續高息中小 普通賣出)。
+                        - category: 固定填入 "投資"。
+                        - type: 若損益為獲利(紅字/正數)則填 "INCOME"，若為虧損(綠字/負數)則填 "EXPENSE"。
+                        - amount: 取損益金額的「絕對值」 (數字，移除逗號)。
+
+                        例如：看到 "普通賣出 ... -3,712 (綠字)"，應轉換為 { "amount": 3712, "type": "EXPENSE" }。
+                        例如：看到 "普通賣出 ... 1,238 (紅字)"，應轉換為 { "amount": 1238, "type": "INCOME" }。
+                    ` }
                 ]
             },
             config: { 
                 responseMimeType: "application/json",
-                safetySettings: VISION_SAFETY_SETTINGS // Apply safety settings here too
+                safetySettings: VISION_SAFETY_SETTINGS,
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            date: { type: Type.STRING },
+                            amount: { type: Type.NUMBER },
+                            category: { type: Type.STRING },
+                            item: { type: Type.STRING },
+                            type: { type: Type.STRING, enum: ['EXPENSE', 'INCOME'] }
+                        },
+                        required: ['date', 'amount', 'category', 'item', 'type']
+                    }
+                }
             }
         });
+        
+        console.debug("Gemini Vision Response (PL):", response.text);
         const cleaned = cleanJsonString(response.text);
         return JSON.parse(cleaned);
     } catch (error) {
