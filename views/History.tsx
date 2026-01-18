@@ -1,19 +1,38 @@
 
 import React from 'react';
 import { Card } from '../components/ui';
-import { Code2, GitCommit, CheckCircle2, AlertTriangle, ThumbsUp, Archive } from 'lucide-react';
+import { Code2, GitCommit, CheckCircle2, AlertTriangle, ThumbsUp, Archive, Mic } from 'lucide-react';
 
 export const HistoryView: React.FC = () => {
   const versions = [
     {
-      tag: "V5.1 (Current)",
+      tag: "V5.3 (Current)",
       status: "current",
+      title: "AI 語音記帳版",
+      features: [
+        "新增：AI 語音記帳按鈕 (Voice FAB)，支援自然語言快速輸入",
+        "體驗：無需打字，直接說「午餐吃排骨飯120」即可自動分類並入帳",
+        "技術：整合 Web Speech API 與 Gemini 語意分析"
+      ]
+    },
+    {
+      tag: "V5.2 (Stable)",
+      status: "past",
+      title: "雲端同步與預算防禦版",
+      features: [
+        "新增：Google Drive 雲端同步 (Beta)，支援跨裝置備份與還原",
+        "新增：AI 預算編列與「購買模擬器」，預測大額消費對現金流影響",
+        "優化：貸款資產支援「寬限期」與「本息攤還」自動試算邏輯"
+      ]
+    },
+    {
+      tag: "V5.1 (Stable)",
+      status: "past",
       title: "智能聯網搜尋增強版",
       features: [
         "優化：移除手動股利匯入，改為自動化資訊整合",
         "新增：Gemini Search Grounding 聯網搜尋技術",
-        "功能：自動搜尋持股殖利率、配息金額與頻率",
-        "介面：持股明細新增股利資訊標籤"
+        "功能：自動搜尋持股殖利率、配息金額與頻率"
       ]
     },
     {
@@ -25,31 +44,21 @@ export const HistoryView: React.FC = () => {
         "新增：股票庫存截圖自動分析與資產連動",
         "新增：已實現損益自動記帳功能"
       ]
-    },
-    {
-      tag: "V4.9 (Stable)",
-      status: "past",
-      title: "動態數據分析與精準匯入版",
-      features: [
-        "新增：自動入帳 (Auto-Execute) 固定收支邏輯",
-        "里程碑：完成動態時間範圍選擇器 (週/月/季)",
-        "優化：數據趨勢圖與結構分析支援跨月展示"
-      ]
     }
   ];
 
   const evaluations = [
     {
-      title: "投資自動化",
-      icon: <Code2 className="text-violet-400" size={24}/>,
-      pros: ["截圖分析解決了無 API 串接的痛點", "資產連動邏輯確保了帳面價值的一致性"],
-      cons: ["依賴 OCR 清晰度，模糊圖片可能導致辨識數值錯誤"]
+      title: "語音輸入體驗",
+      icon: <Mic className="text-red-400" size={24}/>,
+      pros: ["極速記帳，解決手機打字不便的痛點", "AI 自動判斷分類，省去手動選擇的步驟"],
+      cons: ["依賴瀏覽器麥克風權限與網路連線"]
     },
     {
-      title: "資料自動化",
-      icon: <CheckCircle2 className="text-emerald-400" size={24}/>,
-      pros: ["CSV 匯入大幅減少手動記帳負擔", "AI 批次分類精準度高且節省 Token"],
-      cons: ["CSV 格式依賴財政部標準，若格式更動需維護"]
+      title: "雲端同步機制",
+      icon: <Code2 className="text-blue-400" size={24}/>,
+      pros: ["利用 Google Drive API 實現完全私有的雲端備份", "不需要架設後端資料庫，大幅降低維護成本"],
+      cons: ["需設定 OAuth Client ID，對非技術背景用戶有一定門檻"]
     }
   ];
 

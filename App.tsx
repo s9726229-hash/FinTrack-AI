@@ -12,6 +12,7 @@ import { Budget } from './views/Budget'; // Import new view
 import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, Currency, BudgetConfig } from './types';
 import * as storage from './services/storage';
 import { CheckCircle2, X } from 'lucide-react';
+import { VoiceInputFab } from './components/VoiceInputFab'; // New Import
 
 // Helper: Calculate Remaining Loan Balance (Amortization)
 const calculateLoanBalance = (asset: Asset): number => {
@@ -69,6 +70,7 @@ export default function App() {
   const [recurringExecuted, setRecurringExecuted] = useState<Record<string, string[]>>({});
   const [stockSnapshots, setStockSnapshots] = useState<StockSnapshot[]>([]);
   const [budgets, setBudgets] = useState<BudgetConfig[]>([]); // New State
+  const [apiKey, setApiKey] = useState<string>(''); // Track API key for voice button
   
   // Global Toast State
   const [toast, setToast] = useState<{message: string, count: number} | null>(null);
@@ -81,6 +83,7 @@ export default function App() {
     setRecurringExecuted(storage.getRecurringExecuted());
     setStockSnapshots(storage.getStockSnapshots());
     setBudgets(storage.getBudgets()); // Load Budgets
+    setApiKey(storage.getApiKey()); // Check key
   };
 
   useEffect(() => {
@@ -279,9 +282,13 @@ export default function App() {
 
   // Transaction Handlers
   const addTransaction = (t: Transaction) => {
-    const updated = [...transactions, t];
+    // Get latest to avoid race condition if possible (though state is fast enough here)
+    const latest = storage.getTransactions();
+    const updated = [...latest, t];
     setTransactions(updated);
     storage.saveTransactions(updated);
+    setToast({ message: `記帳成功！${t.item} $${t.amount}`, count: 1 });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const bulkAddTransactions = (ts: Transaction[]) => {
@@ -340,9 +347,12 @@ export default function App() {
       {view === 'HISTORY' && <HistoryView />}
       {view === 'SETTINGS' && <Settings onDataChange={refreshData} />}
 
+      {/* Global Voice Input Button (Always visible) */}
+      <VoiceInputFab onAddTransaction={addTransaction} hasApiKey={!!apiKey} />
+
       {/* Global Toast Notification */}
       {toast && (
-        <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 z-[60] animate-fade-in">
+        <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 z-[60] animate-fade-in">
            <div className="bg-white/20 p-1 rounded-full">
               <CheckCircle2 size={20} />
            </div>

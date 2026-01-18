@@ -44,7 +44,7 @@ export interface Transaction {
   note?: string;
   type: 'EXPENSE' | 'INCOME';
   invoiceId?: string; // 電子發票號碼
-  source?: 'MANUAL' | 'CSV' | 'AI_STOCK'; // 資料來源
+  source?: 'MANUAL' | 'CSV' | 'AI_STOCK' | 'AI_VOICE'; // 資料來源
 }
 
 export interface RecurringItem {
@@ -144,3 +144,9 @@ export interface LocalStorageData {
 }
 
 export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'BUDGET' | 'HISTORY' | 'SETTINGS';
+
+// --- Web Speech API Types ---
+export interface IWindow extends Window {
+  webkitSpeechRecognition: any;
+  SpeechRecognition: any;
+}

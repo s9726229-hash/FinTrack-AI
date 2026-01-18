@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Input } from '../components/ui';
 import { exportData, importData, clearAllData, getApiKey, saveApiKey, getGoogleClientId, saveGoogleClientId } from '../services/storage';
 import { initGapi, initGis, handleAuthClick, uploadToDrive, downloadFromDrive, getBackupMetadata } from '../services/googleDrive';
-import { Download, Upload, Trash2, History, CheckCircle2, AlertCircle, X, Key, Eye, EyeOff, Cloud, RefreshCw, LogIn, ExternalLink, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Download, Upload, Trash2, History, CheckCircle2, AlertCircle, X, Key, Eye, EyeOff, Cloud, RefreshCw, LogIn, ExternalLink, HelpCircle, AlertTriangle, Copy, UserCheck, Users } from 'lucide-react';
 
 interface SettingsProps {
   onDataChange: () => void;
@@ -18,9 +18,14 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
   const [googleClientId, setGoogleClientId] = useState('');
   const [isDriveConnected, setIsDriveConnected] = useState(false);
   const [isDriveLoading, setIsDriveLoading] = useState(false);
+  const [currentOrigin, setCurrentOrigin] = useState('');
 
   useEffect(() => {
     setApiKey(getApiKey());
+    // Get the exact current origin (e.g. https://yourname.github.io)
+    // Removing trailing slash if present just in case
+    const origin = window.location.origin.replace(/\/$/, "");
+    setCurrentOrigin(origin);
     
     // Check URL for client_id parameter for quick setup on new devices
     const params = new URLSearchParams(window.location.search);
@@ -53,6 +58,11 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
       setTimeout(() => setNotification(null), 5000);
   };
 
+  const copyToClipboard = (text: string) => {
+      navigator.clipboard.writeText(text);
+      showNotify('success', '已複製到剪貼簿');
+  };
+
   // --- Drive Handlers ---
   const handleConnectDrive = async () => {
       if (!googleClientId) {
@@ -78,12 +88,15 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
       } catch (e: any) {
           console.error(e);
           // Show user-friendly error messages for common OAuth issues
-          if (e.message?.includes('origin_mismatch') || e?.error === 'idpiframe_initialization_failed') {
-              showNotify('error', '來源網址不符：請檢查 Google Console 的「已授權 JavaScript 來源」。');
+          const errString = JSON.stringify(e);
+          if (e.message?.includes('origin_mismatch') || e?.error === 'idpiframe_initialization_failed' || errString.includes('origin_mismatch')) {
+              showNotify('error', '網址設定錯誤：請確認 Google Console 內的來源網址「沒有」包含 /FinTrack-AI/ 等路徑，且與下方顯示的完全一致。');
           } else if (e?.error === 'popup_closed_by_user') {
               showNotify('error', '取消登入：您關閉了登入視窗。');
+          } else if (e?.error === 'access_denied' || errString.includes('access_denied')) {
+              showNotify('error', '存取被拒 (403)：您的 Email 未加入測試名單。請參閱下方步驟 3 設定「測試使用者」。');
           } else {
-              showNotify('error', `連接失敗: ${e.message || e.error || '未知的授權錯誤'}`);
+              showNotify('error', `連接失敗: ${e.message || e.error || '未知的授權錯誤 (請確認 Client ID 正確)'}`);
           }
       } finally {
           setIsDriveLoading(false);
@@ -196,166 +209,158 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
                       
                       <div className="space-y-4 text-xs text-slate-400">
                           <div>
-                              <p className="font-bold text-slate-200 mb-1">1. 建立專案與啟用 API</p>
+                              <p className="font-bold text-slate-200 mb-1">1. 設定 OAuth 來源 (解決 origin_mismatch)</p>
                               <ul className="list-disc list-inside pl-1 space-y-0.5">
-                                  <li>前往 <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Cloud Console</a>。</li>
-                                  <li>左上角選單 (≡) &gt; 「API 和服務」 &gt; 「已啟用的 API 和服務」。</li>
-                                  <li>點擊上方 <strong>「+ 啟用 API 和服務」</strong>，搜尋 <code>Google Drive API</code> 並啟用。</li>
+                                  <li>前往 <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">憑證 (Credentials)</a> &gt; 您的 OAuth Client ID。</li>
+                                  <li>在 <strong>「已授權的 JavaScript 來源」</strong> 填入下方網址：</li>
+                                  <li className="bg-blue-500/10 p-2 rounded border border-blue-500/20 mt-1 mb-1 flex items-center gap-2">
+                                      <code className="text-emerald-400 font-mono flex-1 overflow-x-auto">{currentOrigin}</code>
+                                      <button onClick={() => copyToClipboard(currentOrigin)} className="p-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-300"><Copy size={12}/></button>
+                                  </li>
+                                  <li className="text-[10px] text-amber-400">* 請勿包含斜線 <code>/</code> 或路徑。</li>
                               </ul>
                           </div>
 
                           <div>
-                              <p className="font-bold text-slate-200 mb-1">2. 設定 OAuth 同意畫面 (關鍵步驟)</p>
-                              <ul className="list-disc list-inside pl-1 space-y-0.5">
-                                  <li>左側選單點擊 <strong>「OAuth 同意畫面」</strong>。</li>
-                                  <li>User Type 選擇 <strong>「外部 (External)」</strong> &gt; 建立。(若沒出現選擇畫面代表已建立過，請直接往下看)。</li>
-                                  <li>填寫應用程式名稱 (如 FinTrack) 與您的 Email。</li>
-                                  <li className="text-amber-400 font-bold bg-amber-500/10 p-1 rounded border border-amber-500/20 mt-1">
-                                      重要：拉到最下方「測試使用者 (Test users)」，點擊「+ ADD USERS」，輸入您的 Gmail 信箱。
-                                  </li>
-                                  <li>(若沒做這步，登入時會顯示 Access blocked 錯誤)</li>
+                              <p className="font-bold text-slate-200 mb-1 flex items-center gap-2">
+                                  <UserCheck size={14} className="text-rose-400"/> 
+                                  2. 設定測試使用者 (解決「存取被拒」錯誤)
+                              </p>
+                              <ul className="list-disc list-inside pl-1 space-y-0.5 text-rose-300">
+                                  <li>前往左側選單的 <strong>「OAuth 同意畫面」</strong> &gt; <strong>「測試使用者」</strong>。</li>
+                                  <li><span className="font-bold underline">必須</span> 輸入您要登入的 Google Email 並儲存。</li>
                               </ul>
                           </div>
 
-                          <div>
-                              <p className="font-bold text-slate-200 mb-1">3. 取得 Client ID</p>
-                              <ul className="list-disc list-inside pl-1 space-y-0.5">
-                                  <li>左側選單點擊 <strong>「憑證 (Credentials)」</strong>。</li>
-                                  <li>點擊上方 <strong>「+ 建立憑證」</strong> &gt; <strong>「OAuth 用戶端 ID」</strong>。</li>
-                                  <li>應用程式類型：選 <strong>「單頁應用程式」</strong> (或「網頁應用程式」)。</li>
-                                  <li className="bg-slate-700/50 p-1 rounded border border-slate-600">
-                                      已授權的 JavaScript 來源 (Authorized Origins)：<br/>
-                                      <strong>{window.location.origin}</strong>
-                                  </li>
-                                  <li>建立後複製 Client ID 填入下方。</li>
-                              </ul>
+                          <div className="pt-2 border-t border-slate-700/50">
+                              <p className="font-bold text-slate-200 mb-1 flex items-center gap-2">
+                                  <Users size={14} className="text-violet-400"/> 
+                                  3. 如何分享給朋友使用？
+                              </p>
+                              <div className="bg-violet-500/10 p-2 rounded border border-violet-500/20 text-slate-300 space-y-2">
+                                  <p><strong>方法 A (簡單)：</strong> 將朋友 Email 加入上述「測試使用者」名單。</p>
+                                  <p><strong>方法 B (推薦)：</strong> 請朋友建立自己的 Google Cloud 專案，將此網頁網址 ({currentOrigin}) 加入來源，並輸入他們自己的 Client ID。</p>
+                              </div>
                           </div>
                       </div>
                   </div>
 
-                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg text-xs space-y-1">
-                      <h4 className="font-bold text-red-400 flex items-center gap-1"><AlertTriangle size={12}/> 出現 "You can't sign in... policy" 錯誤？</h4>
-                      <p className="text-slate-300">這是最常見的設定錯誤，請檢查：</p>
-                      <ul className="list-disc list-inside text-slate-400 pl-1">
-                          <li>您在 Google Console 填寫的網址是否與上方瀏覽器網址列<strong>完全一致</strong>？</li>
-                          <li>如果您瀏覽器是 <code>http://127.0.0.1:3000</code>，Console 裡不能填 <code>localhost:3000</code>，必須填 <code>http://127.0.0.1:3000</code>。</li>
-                          <li>請確保網址是填在<strong>「已授權的 JavaScript 來源 (Origins)」</strong>，而不是「重新導向 URI」。</li>
-                      </ul>
+                  <div className="space-y-2">
+                      <label className="block text-xs font-medium text-slate-400 uppercase">Google Client ID</label>
+                      <div className="flex gap-2">
+                          <Input 
+                              type="text" 
+                              value={googleClientId} 
+                              onChange={(e) => setGoogleClientId(e.target.value)}
+                              placeholder="例如：123456789-abcde...apps.googleusercontent.com"
+                              className="font-mono text-xs bg-black/30"
+                          />
+                          <Button onClick={handleSaveClientId} variant="secondary" className="shrink-0 h-10">儲存 ID</Button>
+                      </div>
                   </div>
               </div>
-              
-              {!isDriveConnected ? (
-                  <div className="flex gap-2">
-                     <div className="flex-1">
-                        <Input 
-                            value={googleClientId}
-                            onChange={(e) => setGoogleClientId(e.target.value)}
-                            placeholder="輸入 Google Client ID (例如: 123...apps.googleusercontent.com)"
-                        />
-                     </div>
-                     <Button variant="secondary" onClick={handleSaveClientId}>儲存 ID</Button>
-                     <Button 
-                        onClick={handleConnectDrive} 
-                        loading={isDriveLoading}
-                        className="bg-white text-slate-900 hover:bg-slate-200"
-                     >
-                         <LogIn size={16} className="mr-2"/> 連接 Drive
-                     </Button>
-                  </div>
-              ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                      <Button 
-                         onClick={handleBackupToDrive} 
-                         loading={isDriveLoading}
-                         className="bg-blue-600 hover:bg-blue-500"
-                      >
-                         <Upload size={16} className="mr-2"/> 備份上傳 (覆蓋雲端)
-                      </Button>
-                      <Button 
-                         onClick={handleRestoreFromDrive} 
-                         loading={isDriveLoading}
-                         className="bg-emerald-600 hover:bg-emerald-500"
-                      >
-                         <Download size={16} className="mr-2"/> 還原下載 (覆蓋本地)
-                      </Button>
-                      <div className="col-span-2 text-center">
-                          <span className="text-xs text-emerald-400 flex items-center justify-center gap-1">
-                              <CheckCircle2 size={12}/> 已連接至 Google Drive
-                          </span>
-                      </div>
-                  </div>
-              )}
+
+              <div className="flex flex-col md:flex-row gap-3 pt-2">
+                  <Button 
+                      onClick={handleConnectDrive} 
+                      disabled={isDriveLoading || isDriveConnected} 
+                      className={`flex-1 ${isDriveConnected ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-blue-600 hover:bg-blue-500'}`}
+                  >
+                      {isDriveLoading ? <RefreshCw className="animate-spin" size={18}/> : isDriveConnected ? <CheckCircle2 size={18}/> : <LogIn size={18}/>}
+                      {isDriveConnected ? '已連接 Google Drive' : '連接 Google 帳號'}
+                  </Button>
+                  
+                  {isDriveConnected && (
+                      <>
+                          <Button onClick={handleBackupToDrive} disabled={isDriveLoading} variant="secondary" className="flex-1">
+                              <Upload size={18} className="mr-2"/> 上傳備份
+                          </Button>
+                          <Button onClick={handleRestoreFromDrive} disabled={isDriveLoading} variant="secondary" className="flex-1">
+                              <Cloud size={18} className="mr-2"/> 從雲端還原
+                          </Button>
+                      </>
+                  )}
+              </div>
           </div>
       </Card>
 
-      {/* API Key Config */}
+      {/* Gemini API Key Settings */}
       <Card>
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white"><Key className="text-amber-400"/> AI 金鑰設定 (Gemini)</h3>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white"><Key className="text-primary"/> Gemini API Key 設定</h3>
           <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 space-y-4">
+              <div className="text-sm text-slate-400">
+                  <p className="mb-2">啟用 AI 智慧分析、收支自動分類與股票建議功能。</p>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1 w-fit mb-3">
+                      <ExternalLink size={14}/> 取得免費 API Key
+                  </a>
+              </div>
               <div className="flex gap-2">
                   <div className="relative flex-1">
                       <Input 
-                          type={showKey ? "text" : "password"}
-                          value={apiKey}
+                          type={showKey ? "text" : "password"} 
+                          value={apiKey} 
                           onChange={(e) => setApiKey(e.target.value)}
-                          placeholder="請輸入 Gemini API Key (AIza...)"
-                          className="pr-10"
+                          placeholder="貼上您的 Gemini API Key"
+                          className="pr-10 bg-black/30"
                       />
                       <button 
-                        onClick={() => setShowKey(!showKey)}
-                        className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300"
+                          onClick={() => setShowKey(!showKey)}
+                          className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300"
                       >
-                          {showKey ? <EyeOff size={16}/> : <Eye size={16}/>}
+                          {showKey ? <EyeOff size={18}/> : <Eye size={18}/>}
                       </button>
                   </div>
-                  <Button onClick={handleSaveKey}>儲存設定</Button>
+                  <Button onClick={handleSaveKey} variant="primary" className="shrink-0">儲存</Button>
               </div>
           </div>
       </Card>
 
+      {/* Manual Data Management */}
       <Card>
-         <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white"><History className="text-cyan-400"/> 本地備份與還原</h3>
-         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <Button variant="secondary" onClick={exportData} className="h-28 flex-col gap-3 border border-slate-700 hover:border-primary/50 group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="bg-slate-800 p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
-                    <Download size={24}/> 
-                  </div>
-                  <div className="text-center">
-                    <span className="block font-bold text-slate-200">匯出備份 (Export)</span>
-                    <span className="text-xs text-slate-500 font-normal">下載 JSON</span>
-                  </div>
-               </Button>
-               
-               <label className="cursor-pointer h-28 bg-slate-800 hover:bg-slate-750 rounded-lg flex flex-col items-center justify-center gap-3 text-slate-100 font-medium transition-all border border-slate-700 hover:border-cyan-400/50 group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="bg-slate-900 p-3 rounded-full group-hover:bg-cyan-500 group-hover:text-white transition-colors">
-                    <Upload size={24}/>
-                  </div>
-                  <div className="text-center">
-                    <span className="block font-bold text-slate-200">匯入備份 (Import)</span>
-                    <span className="text-xs text-slate-500 font-normal">讀取 JSON</span>
-                  </div>
-                  <input type="file" className="hidden" accept=".json" onChange={handleImport} />
-               </label>
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white"><History className="text-amber-500"/> 本地資料管理</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+                <h4 className="font-bold text-white flex items-center gap-2"><Download size={16}/> 匯出備份 (JSON)</h4>
+                <p className="text-xs text-slate-400 mb-3">下載完整資料檔到此裝置，可用於手動備份。</p>
+                <Button onClick={exportData} variant="secondary" className="w-full">
+                   下載 .json 檔案
+                </Button>
             </div>
 
-            <div className="pt-6 border-t border-slate-700/50">
-               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-red-500/5 p-4 rounded-xl border border-red-500/10">
-                   <div>
-                       <h4 className="text-red-400 font-bold text-sm flex items-center gap-2">
-                           <AlertCircle size={14}/> 危險區域
-                       </h4>
-                       <p className="text-xs text-red-400/70 mt-1">此操作將無法復原，請謹慎使用。</p>
-                   </div>
-                   <Button variant="danger" onClick={handleReset} className="w-full md:w-auto text-xs py-2">
-                      <Trash2 size={14}/> 清除所有資料 (重置)
-                   </Button>
-               </div>
+            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 space-y-2">
+                <h4 className="font-bold text-white flex items-center gap-2"><Upload size={16}/> 匯入還原</h4>
+                <p className="text-xs text-slate-400 mb-3">從 .json 檔案還原資料 (將覆蓋現有紀錄)。</p>
+                <div className="relative">
+                    <input 
+                        type="file" 
+                        onChange={handleImport}
+                        accept=".json"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Button variant="secondary" className="w-full">
+                       選擇檔案匯入
+                    </Button>
+                </div>
             </div>
-         </div>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-slate-700">
+            <h4 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2"><AlertCircle size={16}/> 危險區域</h4>
+            <div className="flex items-center justify-between bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                <div className="text-xs text-red-200">
+                    清除所有本地資料，將系統重置為初始狀態。
+                </div>
+                <Button onClick={handleReset} variant="danger" className="text-xs px-3 py-1.5 h-auto">
+                    重置系統
+                </Button>
+            </div>
+        </div>
       </Card>
+
+      <div className="text-center text-xs text-slate-600 pb-4">
+          <p>FinTrack AI V5.2 • Built with Gemini 2.5 Flash</p>
+          <p className="mt-1">Data is stored locally on your device.</p>
+      </div>
     </div>
   );
 };
