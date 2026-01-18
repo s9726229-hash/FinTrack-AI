@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, Select } from '../ui';
 import { Transaction } from '../../types';
-import { Sparkles, Pencil, Info, Wand2, AlertCircle } from 'lucide-react';
+import { Sparkles, Pencil, Info, Wand2 } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../constants';
 import { parseTransactionInput } from '../../services/gemini';
 
@@ -188,59 +188,6 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
              </div>
          )}
       </div>
-    </Modal>
-  );
-};
-
-interface ImportResultModalProps {
-  result: { success: number; totalAmount: number; skipped: Transaction[] } | null;
-  onClose: () => void;
-}
-
-export const ImportResultModal: React.FC<ImportResultModalProps> = ({ result, onClose }) => {
-  return (
-    <Modal isOpen={!!result} onClose={onClose} title="發票匯入完成報告">
-      {result && (
-          <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
-                      <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1">成功匯入</p>
-                      <p className="text-2xl font-bold text-white">{result.success} 筆</p>
-                      <p className="text-xs text-emerald-500/70 mt-1">+${result.totalAmount.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
-                      <p className="text-[10px] text-amber-400 font-bold uppercase mb-1">自動跳過</p>
-                      <p className="text-2xl font-bold text-white">{result.skipped.length} 筆</p>
-                      <p className="text-xs text-amber-500/70 mt-1">偵測到重複發票</p>
-                  </div>
-              </div>
-              {result.skipped.length > 0 && (
-                  <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-slate-400 flex items-center gap-2">
-                         <AlertCircle size={14}/> 重複項目細節
-                      </h4>
-                      <div className="max-h-[200px] overflow-y-auto space-y-1.5 pr-2">
-                          {result.skipped.map((s, i) => (
-                              <div key={i} className="flex items-center justify-between p-2 bg-slate-900/50 rounded border border-slate-700/50 text-[10px]">
-                                  <div className="flex flex-col">
-                                      <span className="text-slate-200 font-medium">{s.item}</span>
-                                      <span className="text-slate-500">{s.date} • {s.invoiceId}</span>
-                                  </div>
-                                  <span className="text-slate-400 font-mono">${s.amount}</span>
-                              </div>
-                          ))}
-                      </div>
-                  </div>
-              )}
-              <div className="bg-slate-900/50 p-3 rounded-lg flex items-start gap-3 border border-slate-700/30">
-                  <Info size={16} className="text-cyan-400 shrink-0 mt-0.5"/>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">
-                      系統已根據發票號碼、日期與金額自動進行精準去重。
-                  </p>
-              </div>
-              <Button className="w-full" onClick={onClose}>確認並關閉</Button>
-          </div>
-      )}
     </Modal>
   );
 };

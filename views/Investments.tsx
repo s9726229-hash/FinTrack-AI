@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StockSnapshot, Transaction } from '../types';
+import { StockSnapshot } from '../types';
 import { TrendingUp } from 'lucide-react';
 
 // New Components
@@ -10,9 +10,6 @@ import { StockInventoryList } from '../components/investments/StockInventoryList
 
 interface InvestmentsProps {
   snapshots: StockSnapshot[];
-  onAddSnapshot: (snapshot: StockSnapshot) => void;
-  onUpdateAssetValue: (amount: number) => void; 
-  onBulkAddTransactions: (ts: Transaction[]) => void;
 }
 
 export const Investments: React.FC<InvestmentsProps> = ({ 

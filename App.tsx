@@ -253,33 +253,6 @@ export default function App() {
     storage.saveAssets(updated);
   };
 
-  const handleUpdateStockAssetValue = (newTotalValue: number) => {
-      const stockAsset = assets.find(a => a.type === AssetType.STOCK);
-      if (stockAsset) {
-          const updatedAsset: Asset = {
-              ...stockAsset,
-              amount: newTotalValue,
-              lastUpdated: Date.now()
-          };
-          updateAsset(updatedAsset);
-          setToast({ message: `已自動同步資產：「${stockAsset.name}」價值更新為 $${newTotalValue.toLocaleString()}`, count: 1 });
-      } else {
-          const newAsset: Asset = {
-              id: crypto.randomUUID(),
-              name: "股票投資帳戶 (Auto)",
-              type: AssetType.STOCK,
-              amount: newTotalValue,
-              originalAmount: newTotalValue,
-              currency: Currency.TWD,
-              exchangeRate: 1,
-              lastUpdated: Date.now()
-          };
-          addAsset(newAsset);
-          setToast({ message: `已自動建立資產：「股票投資帳戶」並更新價值`, count: 1 });
-      }
-      setTimeout(() => setToast(null), 4000);
-  };
-
   // Transaction Handlers
   const addTransaction = (t: Transaction) => {
     // Get latest to avoid race condition if possible (though state is fast enough here)
@@ -289,14 +262,6 @@ export default function App() {
     storage.saveTransactions(updated);
     setToast({ message: `記帳成功！${t.item} $${t.amount}`, count: 1 });
     setTimeout(() => setToast(null), 3000);
-  };
-
-  const bulkAddTransactions = (ts: Transaction[]) => {
-    const updated = [...transactions, ...ts];
-    setTransactions(updated);
-    storage.saveTransactions(updated);
-    setToast({ message: `已成功匯入 ${ts.length} 筆交易紀錄`, count: ts.length });
-    setTimeout(() => setToast(null), 4000);
   };
 
   const deleteTransaction = (id: string) => {
@@ -321,13 +286,6 @@ export default function App() {
     storage.saveRecurring(updated);
   };
 
-  // Investment Handlers
-  const addStockSnapshot = (snapshot: StockSnapshot) => {
-      const updated = [...stockSnapshots, snapshot];
-      setStockSnapshots(updated);
-      storage.saveStockSnapshots(updated);
-  };
-
   // Budget Handlers
   const updateBudgets = (newBudgets: BudgetConfig[]) => {
       setBudgets(newBudgets);
@@ -340,10 +298,10 @@ export default function App() {
     <Layout currentView={view} onChangeView={setView}>
       {view === 'DASHBOARD' && <Dashboard assets={assets} transactions={transactions} stockSnapshots={stockSnapshots} recurring={recurring} />}
       {view === 'ASSETS' && <Assets assets={assets} onAdd={addAsset} onUpdate={updateAsset} onDelete={deleteAsset} />}
-      {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onDelete={deleteTransaction} onBulkAdd={bulkAddTransactions} />}
+      {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onDelete={deleteTransaction} />}
       {view === 'BUDGET' && <Budget transactions={transactions} budgets={budgets} onUpdateBudgets={updateBudgets} />}
       {view === 'RECURRING' && <Recurring items={recurring} executedLog={recurringExecuted} onAdd={addRecurring} onExecute={executeRecurring} onDelete={deleteRecurring} />}
-      {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} onAddSnapshot={addStockSnapshot} onUpdateAssetValue={handleUpdateStockAssetValue} onBulkAddTransactions={bulkAddTransactions} />}
+      {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} />}
       {view === 'HISTORY' && <HistoryView />}
       {view === 'SETTINGS' && <Settings onDataChange={refreshData} />}
 

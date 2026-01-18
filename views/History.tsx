@@ -1,20 +1,19 @@
 
 import React from 'react';
-import { Card } from '../components/ui';
-import { Code2, GitCommit, CheckCircle2, AlertTriangle, ThumbsUp, Archive, Mic, Cpu, Layers } from 'lucide-react';
+import { Card } from '../ui';
+import { Code2, GitCommit, CheckCircle2, Layers, Archive } from 'lucide-react';
 
 export const HistoryView: React.FC = () => {
   const versions = [
     {
-      tag: "V5.3 (Stable)",
+      tag: "V5.3 Lite",
       status: "current",
-      title: "FinTrack AI - 全方位智慧財務管家",
+      title: "FinTrack AI - 輕量化智慧財務管家",
       features: [
-        "核心架構：升級至 React 19 + Vite，支援 PWA 安裝與離線操作，BYOK 架構確保隱私安全。",
-        "AI 語音記帳：整合 Web Speech API 與 Gemini NLP，點擊懸浮按鈕即可口語記帳，自動解析分類與金額。",
-        "視覺投資副駕駛：支援多券商 App 庫存截圖與已實現損益截圖辨識，自動計算市值並聯網搜尋股利資訊。",
+        "核心優化：移除繁雜的影像辨識與發票匯入功能，專注於流暢的記帳與資產追蹤體驗。",
+        "AI 語音記帳：整合 Web Speech API 與 Gemini NLP，點擊懸浮按鈕即可口語記帳。",
         "雲端同步中心：整合 Google Drive API，實現私有雲端加密備份與跨裝置還原。",
-        "智慧預算防禦：新增「購買模擬器」評估消費衝擊、「異常大額雷達」監控消費，以及「AI 預算建議」。",
+        "智慧預算防禦：新增「購買模擬器」評估消費衝擊、「異常大額雷達」監控消費。",
         "資產貸款引擎：支援寬限期設定、年金法本息攤還試算，自動更新每月剩餘貸款本金。"
       ]
     },
@@ -23,19 +22,9 @@ export const HistoryView: React.FC = () => {
       status: "past",
       title: "雲端同步與預算防禦版",
       features: [
-        "新增：Google Drive 雲端同步 (Beta)",
+        "新增：Google Drive 雲端同步",
         "新增：AI 預算編列與「購買模擬器」",
         "優化：貸款資產支援「寬限期」與「本息攤還」自動試算邏輯"
-      ]
-    },
-    {
-      tag: "V5.0",
-      status: "past",
-      title: "投資副駕駛與 AI 視覺分析版",
-      features: [
-        "新增：Gemini Vision 視覺辨識引擎",
-        "新增：股票庫存截圖自動分析與資產連動",
-        "新增：已實現損益自動記帳功能"
       ]
     }
   ];
@@ -45,8 +34,6 @@ export const HistoryView: React.FC = () => {
           category: "AI 智能核心 (Gemini 2.5/3.0)",
           items: [
               "NLP 語意記帳 (語音/文字轉交易)",
-              "Vision 視覺辨識 (庫存/損益截圖分析)",
-              "Search Grounding (聯網搜尋台股股利)",
               "Financial Advisor (資產壓力測試報告)",
               "Purchase Simulator (購買行為現金流模擬)"
           ]
@@ -57,7 +44,6 @@ export const HistoryView: React.FC = () => {
               "多幣別資產管理 (自動匯率換算)",
               "智慧貸款攤提 (寬限期/本息平均)",
               "固定收支自動化 (月繳/年繳自動入帳)",
-              "CSV 發票匯入與去重機制",
               "預算執行率監控與警示"
           ]
       },
@@ -67,7 +53,6 @@ export const HistoryView: React.FC = () => {
               "PWA 漸進式網頁 (支援手機安裝)",
               "Local-First 資料存儲 (IndexedDB/LocalStorage)",
               "Google Drive 私有雲端備份",
-              "API Key 本地端加密存儲",
               "React 19 + TypeScript 高效能渲染"
           ]
       }
@@ -80,7 +65,7 @@ export const HistoryView: React.FC = () => {
          <h2 className="text-3xl font-bold text-white flex items-center gap-3 relative z-10">
             <Code2 className="text-primary"/> 系統日誌與功能總覽
          </h2>
-         <p className="text-slate-300 mt-2 relative z-10">FinTrack AI V5.3 穩定版功能矩陣與演進歷程。</p>
+         <p className="text-slate-300 mt-2 relative z-10">FinTrack AI V5.3 Lite 輕量穩定版。</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -133,13 +118,10 @@ export const HistoryView: React.FC = () => {
 
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
                <h3 className="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                  <Archive size={16}/> 版本發布說明
+                  <Archive size={16}/> 版本說明
                </h3>
                <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                  本版本 (V5.3) 已經過完整測試，系統架構穩定。所有 AI 功能皆採用 Google Gemini 最新模型 (Flash/Pro) 驅動。
-               </p>
-               <p className="text-xs text-slate-400 leading-relaxed">
-                  若您是開發者，可直接將此專案推送至 GitHub，程式碼已針對 Vercel 或 GitHub Pages 部署進行優化。
+                  本版本 (V5.3 Lite) 專注於程式碼輕量化，已移除部分視覺辨識與匯入功能以提升載入速度與維護性。
                </p>
             </div>
          </div>

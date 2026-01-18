@@ -17,7 +17,6 @@ interface TransactionsProps {
   transactions: Transaction[];
   onAdd: (t: Transaction) => void;
   onDelete: (id: string) => void;
-  onBulkAdd?: (ts: Transaction[]) => void;
 }
 
 export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd, onDelete }) => {
