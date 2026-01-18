@@ -83,20 +83,83 @@ export const generateFinancialReport = async (
 ): Promise<AIReportData | null> => {
   try {
     const ai = getAI();
+    
+    // Prepare Data Context (Optimized size)
+    const recentExpenses = transactions
+        .filter(t => t.type === 'EXPENSE')
+        .slice(0, 15)
+        .map(t => ({ i: t.item, a: t.amount, c: t.category })); // Minify keys
+
     const context = {
-      assets: assets.map(a => ({ name: a.name, amount: a.amount, type: a.type })),
-      recurring: recurring.map(r => ({ name: r.name, amount: r.amount, type: r.type, freq: r.frequency }))
+      assetsSummary: {
+          total: assets.reduce((sum, a) => a.type !== 'DEBT' ? sum + a.amount : sum, 0),
+          debt: assets.reduce((sum, a) => a.type === 'DEBT' ? sum + a.amount : sum, 0),
+          cash: assets.filter(a => a.type === 'CASH').reduce((sum, a) => sum + a.amount, 0)
+      },
+      holdings: stocks.slice(0, 8).map(s => ({ n: s.name, v: s.marketValue, pl: s.unrealizedPL })),
+      debts: assets.filter(a => a.type === 'DEBT').map(a => ({ n: a.name, amt: a.amount })),
+      recurring: recurring.map(r => ({ n: r.name, amt: r.amount, type: r.type, freq: r.frequency })),
+      recentExpenses
     };
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `身為財務精算師，請根據以下資料進行壓力測試與理財建議：${JSON.stringify(context)}。請嚴格遵守 JSON 回傳格式。`,
-      config: { responseMimeType: "application/json" }
+      contents: `身為財務精算師，請根據以下資料進行壓力測試(DTI/現金流)與理財建議：${JSON.stringify(context)}。`,
+      config: { 
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            healthScore: { type: Type.NUMBER, description: "0-100 score" },
+            cashFlowForecast: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                    yearLabel: { type: Type.STRING },
+                    monthlyFixedCost: { type: Type.NUMBER },
+                    monthlyIncome: { type: Type.NUMBER },
+                    debtToIncomeRatio: { type: Type.NUMBER },
+                    isGracePeriodEnded: { type: Type.BOOLEAN },
+                },
+                required: ['yearLabel', 'debtToIncomeRatio']
+              }
+            },
+            debtAnalysis: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                     name: { type: Type.STRING },
+                     status: { type: Type.STRING },
+                     suggestion: { type: Type.STRING },
+                },
+                required: ['name', 'status', 'suggestion']
+              }
+            },
+            investmentSuggestions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                     action: { type: Type.STRING, enum: ['KEEP', 'SELL', 'BUY'] },
+                     target: { type: Type.STRING },
+                     reason: { type: Type.STRING },
+                },
+                required: ['action', 'target', 'reason']
+              }
+            },
+            summary: { type: Type.STRING },
+          },
+          required: ['healthScore', 'cashFlowForecast', 'debtAnalysis', 'investmentSuggestions', 'summary']
+        }
+      }
     });
 
     const cleaned = cleanJsonString(response.text);
     return JSON.parse(cleaned);
   } catch (error) {
+    console.error("Gemini Report Error", error);
     return null;
   }
 };
