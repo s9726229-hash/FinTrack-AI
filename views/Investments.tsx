@@ -22,9 +22,9 @@ export const Investments: React.FC<InvestmentsProps> = ({
        <div className="flex justify-between items-center">
          <div>
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <TrendingUp className="text-violet-400"/> 股票投資副駕駛
+                <TrendingUp className="text-violet-400"/> 股票投資概況
             </h2>
-            <p className="text-xs text-slate-400 mt-1">AI 視覺辨識庫存與損益 • 自動搜尋股利</p>
+            <p className="text-xs text-slate-400 mt-1">追蹤庫存市值、未實現損益與股利政策</p>
          </div>
          <div className="flex gap-2">
              {/* 按鈕已移除 */}
