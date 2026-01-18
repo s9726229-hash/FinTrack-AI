@@ -6,10 +6,15 @@ import { EXPENSE_CATEGORIES } from '../constants';
 
 // Helper to get AI instance dynamically with the latest key
 const getAI = () => {
+    // For premium models like gemini-3-pro-image-preview, the key might come from window.aistudio
+    // but process.env.API_KEY is the standard access method after selection.
+    // The local storage key is a fallback for other models.
     const key = process.env.API_KEY || getApiKey();
     if (!key) {
-        console.warn("API Key is missing. Please set it in Settings.");
+        console.warn("API Key is missing. Please set it in Settings or via the premium model flow.");
     }
+    // A dummy key is provided to prevent the SDK from crashing if no key is available at initialization.
+    // The actual API call will fail later if the key is still missing, which is handled.
     return new GoogleGenAI({ apiKey: key || 'dummy_key_to_prevent_crash' });
 };
 
@@ -104,6 +109,72 @@ export const categorizeExpense = async (storeName: string, items: string[]): Pro
     } catch (error) {
         console.error("Gemini Categorization Error:", error);
         return defaultCategory;
+    }
+};
+
+/**
+ * New V5.7: Analyzes a stock portfolio screenshot.
+ */
+export const parseStockScreenshot = async (base64Image: string): Promise<Partial<StockPosition>[]> => {
+    try {
+        const ai = getAI();
+
+        const imagePart = {
+            inlineData: {
+                mimeType: 'image/png',
+                data: base64Image
+            }
+        };
+
+        const textPart = {
+            text: `你是一位頂尖的金融數據AI助理，專門從圖片中精準擷取台灣股市的持股資料。請分析這張券商庫存的截圖。
+
+**任務指示：**
+
+1.  **辨識持股區塊**：圖片中每一檔股票的資訊都由連續的 **兩列** 組成。
+2.  **擷取關鍵欄位**：
+    *   **股票名稱 (\`name\`)**：位於第一列的「名稱」欄位。
+    *   **目前市價 (\`currentPrice\`)**：位於第一列的「市價/均價」欄位。
+    *   **持有股數 (\`shares\`)**：位於第一列的「股數/可下單數」欄位。
+    *   **平均成本 (\`cost\`)**：位於 **第二列** 的「市價/均價」欄位。
+3.  **推斷股票代號 (\`symbol\`)**：
+    *   根據股票名稱推斷其上市代號。這是 **非常重要** 的一步。
+    *   範例：
+        *   "元大台灣50" -> "0050"
+        *   "元大高股息" -> "0056"
+        *   "國泰永續高股息" -> "00878"
+        *   "富邦科技" -> "0052"
+        *   "聯電" -> "2303"
+        *   "華城" -> "1519"
+    *   如果真的無法推斷，請留空字串 \`""\`。
+4.  **格式化輸出**：將擷取到的每一筆持股資料，轉換成一個 JSON 物件，最後將所有物件組成一個 JSON 陣列。
+
+**輸出範例：**
+對於「富邦科技」，你會在圖片中看到：
+- 第一列：名稱="富邦科技", 市價=42.07, 股數=3,000
+- 第二列：均價=35.52
+擷取結果應為：
+\`{ "name": "富邦科技", "symbol": "0052", "shares": 3000, "cost": 35.52, "currentPrice": 42.07 }\`
+
+**最終要求：**
+請 **只回傳** 最終的 JSON 陣列，不要包含任何 \`json\` 標籤、註解或其他非 JSON 格式的文字。
+`
+        };
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: { parts: [textPart, imagePart] },
+            config: {
+                temperature: 0.1
+            }
+        });
+        
+        const cleaned = cleanJsonString(response.text);
+        return JSON.parse(cleaned);
+
+    } catch (error) {
+        console.error("Gemini Stock Screenshot Error:", error);
+        return [];
     }
 };
 

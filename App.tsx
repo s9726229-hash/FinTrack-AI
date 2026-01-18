@@ -272,6 +272,18 @@ export default function App() {
       setToast({ message: '預算設定已更新', count: 1 });
       setTimeout(() => setToast(null), 3000);
   };
+  
+  // Stock Snapshot Handler
+  const addStockSnapshot = (snapshot: StockSnapshot) => {
+    const today = new Date().toISOString().split('T')[0];
+    const otherSnapshots = stockSnapshots.filter(s => s.date !== today);
+    const updated = [...otherSnapshots, snapshot];
+    updated.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    setStockSnapshots(updated);
+    storage.saveStockSnapshots(updated);
+    setToast({ message: `成功匯入 ${snapshot.positions.length} 筆庫存資料`, count: snapshot.positions.length });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   return (
     <Layout currentView={view} onChangeView={setView}>
@@ -280,7 +292,7 @@ export default function App() {
       {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onUpdate={updateTransaction} onDelete={deleteTransaction} />}
       {view === 'BUDGET' && <Budget transactions={transactions} budgets={budgets} onUpdateBudgets={updateBudgets} />}
       {view === 'RECURRING' && <Recurring items={recurring} executedLog={recurringExecuted} onAdd={addRecurring} onExecute={executeRecurring} onDelete={deleteRecurring} />}
-      {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} />}
+      {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} onAddSnapshot={addStockSnapshot} />}
       {view === 'GUIDE' && <GuideView />}
       {view === 'HISTORY' && <HistoryView />}
       {view === 'SETTINGS' && <Settings onDataChange={refreshData} />}

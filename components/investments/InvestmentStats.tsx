@@ -31,7 +31,7 @@ export const InvestmentStats: React.FC<InvestmentStatsProps> = ({ currentSnapsho
             </div>
             <div className={`text-4xl font-bold font-mono tracking-tight relative z-10 ${(currentSnapshot?.totalUnrealizedPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {(currentSnapshot?.totalUnrealizedPL || 0) > 0 ? '+' : ''}
-                ${currentSnapshot?.totalUnrealizedPL.toLocaleString() || '0'}
+                ${currentSnapshot?.totalUnrealizedPL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
             </div>
             <div className="text-xs text-slate-500 mt-2 relative z-10">
                 帳面預估獲利
