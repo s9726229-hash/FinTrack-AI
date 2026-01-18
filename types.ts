@@ -44,7 +44,7 @@ export interface Transaction {
   note?: string;
   type: 'EXPENSE' | 'INCOME';
   invoiceId?: string; // 電子發票號碼
-  source?: 'MANUAL' | 'AI_VOICE'; // 資料來源 (Removed unused CSV/AI_STOCK)
+  source?: 'MANUAL' | 'AI_VOICE' | 'INVOICE_CSV'; // 資料來源 (Removed unused CSV/AI_STOCK)
 }
 
 export interface RecurringItem {
@@ -143,7 +143,7 @@ export interface LocalStorageData {
   ft_google_client_id: string; // New Cloud Sync
 }
 
-export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'BUDGET' | 'HISTORY' | 'SETTINGS';
+export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'BUDGET' | 'GUIDE' | 'HISTORY' | 'SETTINGS';
 
 // --- Web Speech API Types ---
 export interface IWindow extends Window {

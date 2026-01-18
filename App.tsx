@@ -7,6 +7,7 @@ import { Transactions } from './views/Transactions';
 import { Recurring } from './views/Recurring';
 import { Settings } from './views/Settings';
 import { HistoryView } from './views/History';
+import { GuideView } from './views/Guide'; // New Import
 import { Investments } from './views/Investments';
 import { Budget } from './views/Budget'; // Import new view
 import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, Currency, BudgetConfig } from './types';
@@ -272,6 +273,7 @@ export default function App() {
       {view === 'BUDGET' && <Budget transactions={transactions} budgets={budgets} onUpdateBudgets={updateBudgets} />}
       {view === 'RECURRING' && <Recurring items={recurring} executedLog={recurringExecuted} onAdd={addRecurring} onExecute={executeRecurring} onDelete={deleteRecurring} />}
       {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} />}
+      {view === 'GUIDE' && <GuideView />}
       {view === 'HISTORY' && <HistoryView />}
       {view === 'SETTINGS' && <Settings onDataChange={refreshData} />}
 

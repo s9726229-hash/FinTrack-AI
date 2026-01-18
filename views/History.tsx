@@ -1,14 +1,184 @@
 
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
   {
-    build: "5.3.2",
-    date: "2024-07-29",
-    title: "建構錯誤修正與程式碼一致性優化",
+    build: "5.4.0",
+    date: "2026-01-18",
+    title: "新功能：電子發票 CSV 匯入",
     status: "verifying",
+    changes: [
+      {
+        icon: FileUp,
+        color: 'text-sky-400',
+        text: "**快速匯入**: 於「收支記帳」頁面新增「匯入電子發票」功能，支援財政部平台的標準 CSV 格式，大幅簡化記帳流程。"
+      },
+      {
+        icon: Sparkles,
+        color: 'text-violet-400',
+        text: "**AI 智慧分類**: 匯入時，Gemini AI 會根據店家名稱與品項自動判斷最適當的消費類別，省去手動設定的麻煩。"
+      },
+       {
+        icon: ShieldCheck,
+        color: 'text-emerald-400',
+        text: "**重複偵測**: 系統會以「發票號碼」為唯一識別碼，自動跳過已存在的紀錄，確保資料的準確性與唯一性。"
+      },
+    ]
+  },
+  {
+    build: "5.3.11",
+    date: "2026-01-18",
+    title: "擴展版本發布 SOP：納入介面版本號與網頁說明",
+    status: "verified",
+    changes: [
+      {
+        icon: Tags,
+        color: 'text-sky-400',
+        text: "**介面同步**: 根據使用者提醒，將「更新主介面版本號」納入新功能發布的標準流程，確保 `Sidebar.tsx` 中顯示的版本永遠與實際功能同步。"
+      },
+      {
+        icon: FileText,
+        color: 'text-emerald-400',
+        text: "**網頁說明同步**: 同步將「更新 `metadata.json` 的網頁說明」納入流程，確保應用程式的公開描述能準確反映最新功能。"
+      },
+       {
+        icon: ListTree,
+        color: 'text-amber-400',
+        text: "**流程固化**: 確立未來所有『新功能』發布，都將遵循包含『程式實作、版本號更新、UI同步、網頁說明、功能導覽、更新日誌』的完整六步驟SOP。"
+      },
+    ]
+  },
+  {
+    build: "5.3.10",
+    date: "2026-01-18",
+    title: "導入語意化版本控制系統",
+    status: "verified",
+    changes: [
+      {
+        icon: GitBranch,
+        color: 'text-sky-400',
+        text: "**流程標準化**: 建立並導入語意化版本控制 (Semantic Versioning) 系統，格式為 `主版號.次版號.修訂號`，以更精確地追蹤變更歷史。"
+      },
+      {
+        icon: PlusCircle,
+        color: 'text-emerald-400',
+        text: "**次版號 (Minor)**: 未來任何「新增功能」的請求，將會提升次版號。例如，從 `5.3.x` 升級至 `5.4.0`。"
+      },
+      {
+        icon: Wrench,
+        color: 'text-amber-400',
+        text: "**修訂號 (Patch)**: 任何「介面錯誤修改」、「小型優化」或「錯誤修正」，將會提升修訂號。例如，從 `5.3.10` 升級至 `5.3.11`。"
+      },
+    ]
+  },
+  {
+    build: "5.3.9",
+    date: "2026-01-18",
+    title: "重構功能導覽為獨立頁面",
+    status: "verified",
+    changes: [
+      {
+        icon: LayoutPanelLeft,
+        color: 'text-sky-400',
+        text: "**UI/UX 重構**: 根據使用者回饋，將「功能導覽」從側邊欄的收合式面板，升級為一個位於主畫面的獨立、完整的頁面，並參照設計稿優化視覺呈現。"
+      },
+      {
+        icon: ListTree,
+        color: 'text-cyan-400',
+        text: "**導覽簡化**: 側邊欄的「功能導覽」項目現在會直接連結至新的功能說明頁面，操作流程更直觀。"
+      },
+    ]
+  },
+  {
+    build: "5.3.8",
+    date: "2026-01-18",
+    title: "側邊欄重構：新增功能導覽與日誌簡化",
+    status: "verified",
+    changes: [
+      {
+        icon: ListTree,
+        color: 'text-sky-400',
+        text: "**日誌導覽簡化**: 根據使用者回饋，恢復「AI 調校日誌」為單純的導覽連結，移除預覽功能，使介面更簡潔。"
+      },
+      {
+        icon: BookOpen,
+        color: 'text-cyan-400',
+        text: "**新增功能導覽**: 於側邊欄加入可收合的「功能導覽」面板，依版本號清晰列出核心功能，協助使用者快速上手。"
+      },
+    ]
+  },
+  {
+    build: "5.3.7",
+    date: "2026-01-18",
+    title: "優化 AI 日誌導覽體驗",
+    status: "verified",
+    changes: [
+      {
+        icon: ListTree,
+        color: 'text-sky-400',
+        text: "**側邊欄優化**: 根據使用者回饋，將 AI 調校日誌的導覽項目改為可展開的選單，直接在側邊欄顯示最新的 3 筆更新紀錄，提升查閱便利性。"
+      },
+    ]
+  },
+  {
+    build: "5.3.6",
+    date: "2026-01-18",
+    title: "新增側邊欄功能導覽",
+    status: "verified",
+    changes: [
+      {
+        icon: BookOpen,
+        color: 'text-cyan-400',
+        text: "**功能導覽**: 於側邊欄新增可收合的功能導覽面板，依主要版本號 (V5.3, V5.2, 核心) 說明各項功能，提升使用者體驗與上手便利性。"
+      },
+    ]
+  },
+  {
+    build: "5.3.5",
+    date: "2026-01-18",
+    title: "優化日誌狀態顯示與說明",
+    status: "verified",
+    changes: [
+      {
+        icon: Info,
+        color: 'text-sky-400',
+        text: "**UX 優化**: 根據使用者回饋，為狀態標籤增加了懸停提示（Tooltip），明確解釋「驗證中」與「驗證通過」的具體含義，避免混淆。"
+      },
+    ]
+  },
+  {
+    build: "5.3.4",
+    date: "2026-01-18",
+    title: "系統時間感校正與日誌更新",
+    status: "verified",
+    changes: [
+      {
+        icon: CalendarCheck,
+        color: 'text-sky-400',
+        text: "**時間感校正**: 根據使用者提供的當前日期 (`2026-01-18`)，全面更新 AI 調校日誌的時間戳，確保紀錄的準確性。"
+      },
+    ]
+  },
+  {
+    build: "5.3.3",
+    date: "2026-01-15",
+    title: "AI 調校日誌日期校正",
+    status: "verified",
+    changes: [
+      {
+        icon: CalendarCheck,
+        color: 'text-sky-400',
+        text: "**日誌校正**: 根據使用者回饋，修正了 `Build 5.3.2` 的錯誤提交日期，並更新了其驗證狀態。"
+      },
+    ]
+  },
+  {
+    build: "5.3.2",
+    date: "2026-01-12",
+    title: "建構錯誤修正與程式碼一致性優化",
+    status: "verified",
     changes: [
       {
         icon: Bug,
@@ -24,7 +194,7 @@ const logs = [
   },
   {
     build: "5.3.1",
-    date: "2024-07-28",
+    date: "2026-01-10",
     title: "程式碼重構與錯誤修正",
     status: "verified",
     changes: [
@@ -48,16 +218,21 @@ const logs = [
 ];
 
 const StatusBadge = ({ status }: { status: string }) => {
-  if (status === 'verifying') {
+  const isVerifying = status === 'verifying';
+  const title = isVerifying 
+    ? "此版本的變更正在等待您的確認。" 
+    : "此版本的變更已被後續的操作確認完成。";
+
+  if (isVerifying) {
     return (
-      <span className="flex items-center gap-1.5 text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-full">
+      <span title={title} className="flex items-center gap-1.5 text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-full cursor-help">
         <Clock size={12} />
         驗證中 (Verifying)
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full">
+    <span title={title} className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full cursor-help">
       <CheckCircle2 size={12} />
       驗證通過 (Verified)
     </span>

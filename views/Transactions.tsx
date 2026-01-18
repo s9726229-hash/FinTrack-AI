@@ -1,10 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Transaction } from '../types';
 import { 
-  ScrollText, Plus, ChevronDown, ChevronUp, PieChart
+  ScrollText, Plus, ChevronDown, ChevronUp, PieChart, UploadCloud, FileCheck2, Loader2, AlertTriangle
 } from 'lucide-react';
 import { getApiKey } from '../services/storage';
+import { parseTransactionInput } from '../services/gemini';
+import { Button, Modal } from '../components/ui';
 
 // Import New Refactored Components
 import { TransactionStats } from '../components/transactions/TransactionStats';
@@ -19,6 +21,20 @@ interface TransactionsProps {
   onDelete: (id: string) => void;
 }
 
+interface ParsedInvoice {
+    invoiceId: string;
+    date: string;
+    storeName: string;
+    amount: number;
+    items: string[];
+}
+
+interface ImportStats {
+    total: number;
+    new: number;
+    skipped: number;
+}
+
 export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd, onDelete }) => {
   const [filter, setFilter] = useState('');
   const [timeRange, setTimeRange] = useState<TimeRange>('THIS_MONTH');
@@ -30,6 +46,13 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
 
   // UI State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Invoice Import State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [newInvoices, setNewInvoices] = useState<Transaction[]>([]);
+  const [importStats, setImportStats] = useState<ImportStats>({ total: 0, new: 0, skipped: 0 });
+  const [isParsing, setIsParsing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasApiKey = !!getApiKey();
 
@@ -120,6 +143,88 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
     };
   }, [transactions, timeRange, customStart, customEnd, filter]); 
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsParsing(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        await parseInvoiceCSV(text);
+        setIsParsing(false);
+    };
+    reader.readAsText(file, 'utf-8');
+    event.target.value = ''; // Reset file input
+  };
+  
+  const parseInvoiceCSV = async (csvText: string) => {
+    const lines = csvText.split('\n').filter(line => line.trim() !== '');
+    const invoiceMap = new Map<string, ParsedInvoice>();
+
+    lines.forEach(line => {
+        const parts = line.split('|');
+        if (parts[0] === 'M') {
+            const dateStr = parts[3];
+            invoiceMap.set(parts[6], {
+                invoiceId: parts[6],
+                date: `${dateStr.substring(0,4)}-${dateStr.substring(4,6)}-${dateStr.substring(6,8)}`,
+                storeName: parts[5],
+                amount: parseInt(parts[7], 10),
+                items: [],
+            });
+        } else if (parts[0] === 'D') {
+            const invoice = invoiceMap.get(parts[1]);
+            if (invoice) {
+                invoice.items.push(parts[3]);
+            }
+        }
+    });
+
+    const parsedInvoices = Array.from(invoiceMap.values());
+    const existingInvoiceIds = new Set(transactions.map(t => t.invoiceId));
+    
+    const newInvoicePromises = parsedInvoices
+        .filter(p => !existingInvoiceIds.has(p.invoiceId))
+        .map(async (p): Promise<Transaction> => {
+            let category = '購物'; // Default
+            if (hasApiKey) {
+                const aiResult = await parseTransactionInput(`${p.storeName} ${p.items[0]}`);
+                if (aiResult?.category) {
+                    category = aiResult.category;
+                }
+            }
+
+            return {
+                id: crypto.randomUUID(),
+                date: p.date,
+                amount: p.amount,
+                category,
+                item: `[發票] ${p.storeName}`,
+                note: p.items.join(', '),
+                type: 'EXPENSE',
+                invoiceId: p.invoiceId,
+                source: 'INVOICE_CSV',
+            };
+        });
+
+    const newTransactions = await Promise.all(newInvoicePromises);
+    
+    setNewInvoices(newTransactions);
+    setImportStats({
+        total: parsedInvoices.length,
+        new: newTransactions.length,
+        skipped: parsedInvoices.length - newTransactions.length,
+    });
+    setIsImportModalOpen(true);
+  };
+  
+  const handleConfirmImport = () => {
+      newInvoices.forEach(t => onAdd(t));
+      setIsImportModalOpen(false);
+      setNewInvoices([]);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-20">
       
@@ -132,6 +237,22 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
             <p className="text-xs text-slate-400 mt-1">記錄每日開銷、收入與發票管理</p>
          </div>
          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".csv"
+              className="hidden"
+            />
+            <Button
+              variant="secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isParsing}
+              className="bg-slate-700 hover:bg-slate-600"
+            >
+              {isParsing ? <Loader2 size={16} className="animate-spin"/> : <UploadCloud size={16}/>}
+              <span className="hidden md:inline">{isParsing ? '解析中...' : '匯入電子發票'}</span>
+            </Button>
             <button 
                 onClick={() => setIsAddModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95"
@@ -189,6 +310,58 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
         onAdd={onAdd}
         hasApiKey={hasApiKey}
       />
+      
+      <Modal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} title="電子發票匯入預覽">
+          <div className="space-y-4">
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 grid grid-cols-3 divide-x divide-slate-700 text-center">
+                  <div>
+                      <p className="text-xs text-slate-400">CSV總筆數</p>
+                      <p className="text-xl font-bold font-mono text-white">{importStats.total}</p>
+                  </div>
+                  <div>
+                      <p className="text-xs text-slate-400">本次新增</p>
+                      <p className="text-xl font-bold font-mono text-emerald-400">{importStats.new}</p>
+                  </div>
+                  <div>
+                      <p className="text-xs text-slate-400">重複跳過</p>
+                      <p className="text-xl font-bold font-mono text-slate-500">{importStats.skipped}</p>
+                  </div>
+              </div>
+              
+              {!hasApiKey && importStats.new > 0 && (
+                  <div className="bg-amber-500/10 text-amber-400 text-xs p-3 rounded-lg border border-amber-500/20 flex items-center gap-2">
+                     <AlertTriangle size={14}/>
+                     未設定 Gemini API Key，所有交易將預設為「購物」分類。
+                  </div>
+              )}
+
+              <h4 className="text-sm font-bold text-slate-300 pt-2">預計匯入 {importStats.new} 筆新交易：</h4>
+              
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+                  {newInvoices.map(t => (
+                      <div key={t.id} className="bg-slate-800 p-2 rounded-lg flex justify-between items-center text-sm">
+                          <div>
+                              <p className="font-bold text-white">{t.item}</p>
+                              <p className="text-xs text-slate-400">{t.date} • {t.category}</p>
+                          </div>
+                          <p className="font-mono text-slate-300">${t.amount.toLocaleString()}</p>
+                      </div>
+                  ))}
+                  {newInvoices.length === 0 && (
+                    <div className="text-center py-10 text-slate-500 text-sm">
+                        沒有可匯入的新發票紀錄。
+                    </div>
+                  )}
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t border-slate-700">
+                  <Button variant="secondary" onClick={() => setIsImportModalOpen(false)} className="flex-1">取消</Button>
+                  <Button onClick={handleConfirmImport} disabled={newInvoices.length === 0} className="flex-1">
+                      <FileCheck2 size={16} className="mr-2"/> 確認匯入
+                  </Button>
+              </div>
+          </div>
+      </Modal>
     </div>
   );
 };
