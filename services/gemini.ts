@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { Transaction, StockPosition, RecurringItem, AssetType, AIReportData, Asset, StockSnapshot, PurchaseAssessment, BudgetConfig } from "../types";
 import { getApiKey } from "./storage";
 
@@ -8,11 +8,39 @@ const getAI = () => {
     const key = process.env.API_KEY || getApiKey();
     if (!key) {
         console.warn("API Key is missing. Please set it in Settings.");
-        // We still return an instance, but calls will fail if key is invalid
-        // Handle this gracefully in UI
     }
     return new GoogleGenAI({ apiKey: key || 'dummy_key_to_prevent_crash' });
 };
+
+// Helper: Clean JSON string (remove markdown code blocks)
+const cleanJsonString = (text: string): string => {
+    if (!text) return "[]";
+    // Remove ```json and ``` wrapping if present
+    let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Occasionally models output "Here is the JSON:" prefix, try to find the first [ or {
+    const firstBracket = cleaned.indexOf('[');
+    const firstBrace = cleaned.indexOf('{');
+    
+    if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+        cleaned = cleaned.substring(firstBracket);
+        const lastBracket = cleaned.lastIndexOf(']');
+        if (lastBracket !== -1) cleaned = cleaned.substring(0, lastBracket + 1);
+    } else if (firstBrace !== -1) {
+        cleaned = cleaned.substring(firstBrace);
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (lastBrace !== -1) cleaned = cleaned.substring(0, lastBrace + 1);
+    }
+    
+    return cleaned;
+};
+
+// Common Safety Settings to prevent OCR blocking
+const VISION_SAFETY_SETTINGS = [
+    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+];
 
 /**
  * 分析語音或文字輸入的交易資訊
@@ -44,7 +72,8 @@ export const parseTransactionInput = async (input: string): Promise<Partial<Tran
       }
     });
 
-    return JSON.parse(response.text || "null");
+    const cleaned = cleanJsonString(response.text || "null");
+    return JSON.parse(cleaned);
   } catch (error) {
     console.error("Gemini Error:", error);
     return null;
@@ -67,6 +96,8 @@ export const analyzeStockInventory = async (base64Data: string, mimeType: string
       },
       config: {
         responseMimeType: "application/json",
+        // Add Safety Settings to prevent OCR false positives
+        safetySettings: VISION_SAFETY_SETTINGS,
         responseSchema: {
           type: Type.ARRAY,
           items: {
@@ -87,7 +118,9 @@ export const analyzeStockInventory = async (base64Data: string, mimeType: string
       }
     });
 
-    return JSON.parse(response.text || "[]");
+    console.debug("Gemini Vision Response:", response.text); // For debugging
+    const cleaned = cleanJsonString(response.text || "[]");
+    return JSON.parse(cleaned);
   } catch (error) {
     console.error("Vision Error:", error);
     return [];
@@ -111,13 +144,15 @@ export const enrichStockDataWithDividends = async (positions: StockPosition[]): 
     });
 
     const text = response.text || "[]";
-    const dividendData = JSON.parse(text.match(/\[.*\]/s)?.[0] || "[]");
+    const cleaned = cleanJsonString(text);
+    const dividendData = JSON.parse(cleaned);
 
     return positions.map(p => {
-      const info = dividendData.find((d: any) => d.symbol?.includes(p.symbol));
+      const info = Array.isArray(dividendData) ? dividendData.find((d: any) => d.symbol?.includes(p.symbol)) : null;
       return info ? { ...p, dividendAmount: info.dividendAmount, dividendYield: info.dividendYield, dividendFrequency: info.dividendFrequency } : p;
     });
   } catch (error) {
+    console.warn("Dividend enrichment failed, returning original data", error);
     return positions;
   }
 };
@@ -144,7 +179,8 @@ export const generateFinancialReport = async (
       config: { responseMimeType: "application/json" }
     });
 
-    return JSON.parse(response.text || "null");
+    const cleaned = cleanJsonString(response.text || "null");
+    return JSON.parse(cleaned);
   } catch (error) {
     return null;
   }
@@ -176,22 +212,32 @@ export const evaluatePurchase = async (ctx: any, scenario: string): Promise<Purc
     contents: `評估購買行為。情境：${scenario}。背景：${JSON.stringify(ctx)}`,
     config: { responseMimeType: "application/json" }
   });
-  return JSON.parse(response.text || "null");
+  const cleaned = cleanJsonString(response.text || "null");
+  return JSON.parse(cleaned);
 };
 
 export const analyzeStockRealizedPL = async (base64Data: string, mimeType: string): Promise<Transaction[]> => {
-    const ai = getAI();
-    const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: {
-            parts: [
-                { inlineData: { data: base64Data, mimeType } },
-                { text: "識別截圖中的已實現損益。回傳 Transaction 陣列 JSON。" }
-            ]
-        },
-        config: { responseMimeType: "application/json" }
-    });
-    return JSON.parse(response.text || "[]");
+    try {
+        const ai = getAI();
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: {
+                parts: [
+                    { inlineData: { data: base64Data, mimeType } },
+                    { text: "識別截圖中的已實現損益。回傳 Transaction 陣列 JSON。" }
+                ]
+            },
+            config: { 
+                responseMimeType: "application/json",
+                safetySettings: VISION_SAFETY_SETTINGS // Apply safety settings here too
+            }
+        });
+        const cleaned = cleanJsonString(response.text || "[]");
+        return JSON.parse(cleaned);
+    } catch (error) {
+        console.error("Analyze PL Error", error);
+        return [];
+    }
 };
 
 /**
@@ -221,5 +267,6 @@ export const generateBudgetSuggestions = async (transactions: Transaction[], rec
             }
         }
     });
-    return JSON.parse(response.text || "[]");
+    const cleaned = cleanJsonString(response.text || "[]");
+    return JSON.parse(cleaned);
 };
