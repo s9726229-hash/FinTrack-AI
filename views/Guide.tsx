@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   BookOpen, Mic, Sparkles, BrainCircuit, Wand2, Calculator, Target, 
   LayoutGrid, PieChart, ScrollText, CalendarClock, TrendingUp, Cloud,
-  UploadCloud
+  UploadCloud, FilePenLine, Pencil
 } from 'lucide-react';
 
 const FeatureSection = ({ title, color, children }: { title: string; color: string; children: React.ReactNode }) => (
@@ -37,7 +37,23 @@ export const GuideView: React.FC = () => {
       </div>
 
       <div className="relative border-l-2 border-slate-800 space-y-12">
-        <FeatureSection title="V5.4 最新功能" color="text-amber-400">
+        <FeatureSection title="V5.6 最新功能" color="text-rose-400">
+            <FeatureItem 
+                icon={Pencil} 
+                title="主列表交易編輯" 
+                description="現在您可以直接在「收支記帳」的主列表中，點擊任一筆已存在的交易紀錄進行編輯，隨時修正類別、金額或日期，讓帳務保持絕對精確。" 
+            />
+        </FeatureSection>
+
+        <FeatureSection title="V5.5 功能" color="text-teal-400">
+            <FeatureItem 
+                icon={FilePenLine} 
+                title="匯入預覽編輯" 
+                description="在確認匯入電子發票前，您可以直接在預覽視窗中修改單筆交易的消費類別、金額或項目名稱，確保每一筆帳都符合您的實際情況。" 
+            />
+        </FeatureSection>
+        
+        <FeatureSection title="V5.4 功能" color="text-amber-400">
             <FeatureItem 
                 icon={UploadCloud} 
                 title="電子發票 CSV 匯入 (V5.4.1 強化)" 

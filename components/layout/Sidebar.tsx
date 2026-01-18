@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) =
           <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
             FinTrack AI
           </h1>
-          <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">V5.4.1</span>
+          <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">V5.6.0</span>
         </div>
       </div>
 

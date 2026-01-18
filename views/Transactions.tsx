@@ -2,11 +2,12 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Transaction } from '../types';
 import { 
-  ScrollText, Plus, ChevronDown, ChevronUp, PieChart, UploadCloud, FileCheck2, Loader2, AlertTriangle
+  ScrollText, Plus, ChevronDown, ChevronUp, PieChart, UploadCloud, FileCheck2, Loader2, AlertTriangle, Pencil, X
 } from 'lucide-react';
 import { getApiKey } from '../services/storage';
 import { categorizeExpense } from '../services/gemini';
-import { Button, Modal } from '../components/ui';
+import { Button, Modal, Input, Select } from '../components/ui';
+import { EXPENSE_CATEGORIES } from '../constants';
 
 // Import New Refactored Components
 import { TransactionStats } from '../components/transactions/TransactionStats';
@@ -18,6 +19,7 @@ import { AddTransactionModal } from '../components/transactions/TransactionModal
 interface TransactionsProps {
   transactions: Transaction[];
   onAdd: (t: Transaction) => void;
+  onUpdate: (t: Transaction) => void;
   onDelete: (id: string) => void;
 }
 
@@ -35,7 +37,7 @@ interface ImportStats {
     skipped: number;
 }
 
-export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd, onDelete }) => {
+export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd, onUpdate, onDelete }) => {
   const [filter, setFilter] = useState('');
   const [timeRange, setTimeRange] = useState<TimeRange>('THIS_MONTH');
   const [showCharts, setShowCharts] = useState(false);
@@ -46,6 +48,7 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
 
   // UI State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
   // Invoice Import State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -53,6 +56,10 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
   const [importStats, setImportStats] = useState<ImportStats>({ total: 0, new: 0, skipped: 0 });
   const [isParsing, setIsParsing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // --- New V5.5: Inline Editing State ---
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<Transaction>>({});
 
   const hasApiKey = !!getApiKey();
 
@@ -222,6 +229,45 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
       setNewInvoices([]);
   };
 
+  const handleModalSubmit = (t: Transaction) => {
+      if (editingTransaction) {
+          onUpdate(t);
+      } else {
+          onAdd(t);
+      }
+      setIsAddModalOpen(false);
+      setEditingTransaction(null);
+  };
+  
+  const handleModalClose = () => {
+      setIsAddModalOpen(false);
+      setEditingTransaction(null);
+  };
+  
+  const handleStartEdit = (t: Transaction) => {
+      setEditingTransaction(t);
+  };
+
+  // --- V5.5: Edit Handlers ---
+  const handleStartInvoiceEdit = (transaction: Transaction) => {
+      setEditingInvoiceId(transaction.id);
+      setEditFormData({ ...transaction });
+  };
+
+  const handleCancelInvoiceEdit = () => {
+      setEditingInvoiceId(null);
+      setEditFormData({});
+  };
+
+  const handleSaveInvoiceEdit = () => {
+      if (!editingInvoiceId) return;
+      const updatedInvoices = newInvoices.map(inv => 
+          inv.id === editingInvoiceId ? { ...inv, ...editFormData, amount: Number(editFormData.amount) } as Transaction : inv
+      );
+      setNewInvoices(updatedInvoices);
+      handleCancelInvoiceEdit();
+  };
+
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-20">
       
@@ -299,12 +345,14 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
       <TransactionList 
         transactions={filteredTransactions} 
         onDelete={onDelete} 
+        onEdit={handleStartEdit}
       />
 
       <AddTransactionModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        onAdd={onAdd}
+        isOpen={isAddModalOpen || !!editingTransaction} 
+        onClose={handleModalClose} 
+        onSubmit={handleModalSubmit}
+        editingData={editingTransaction}
         hasApiKey={hasApiKey}
       />
       
@@ -336,13 +384,43 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
               
               <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
                   {newInvoices.map(t => (
-                      <div key={t.id} className="bg-slate-800 p-2 rounded-lg flex justify-between items-center text-sm">
-                          <div>
-                              <p className="font-bold text-white">{t.item}</p>
-                              <p className="text-xs text-slate-400">{t.date} • {t.category}</p>
-                          </div>
-                          <p className="font-mono text-slate-300">${t.amount.toLocaleString()}</p>
-                      </div>
+                      editingInvoiceId === t.id ? (
+                        <div key={t.id} className="bg-slate-700/80 p-3 rounded-lg space-y-3 border border-primary/50 shadow-lg">
+                            <div>
+                                <label className="text-xs text-slate-400">項目</label>
+                                <Input value={editFormData.item} onChange={e => setEditFormData({...editFormData, item: e.target.value})} className="h-8 text-sm"/>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-xs text-slate-400">類別</label>
+                                    <Select value={editFormData.category} onChange={e => setEditFormData({...editFormData, category: e.target.value})} className="h-8 text-sm">
+                                        {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </Select>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-slate-400">金額</label>
+                                    <Input type="number" value={editFormData.amount} onChange={e => setEditFormData({...editFormData, amount: Number(e.target.value)})} className="h-8 text-sm font-mono"/>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                                <Button onClick={handleCancelInvoiceEdit} variant="secondary" className="px-2 py-1 text-xs">取消</Button>
+                                <Button onClick={handleSaveInvoiceEdit} className="px-2 py-1 text-xs">儲存</Button>
+                            </div>
+                        </div>
+                      ) : (
+                        <div key={t.id} className="bg-slate-800 p-2 rounded-lg flex justify-between items-center text-sm group hover:bg-slate-700/50">
+                            <div>
+                                <p className="font-bold text-white">{t.item}</p>
+                                <p className="text-xs text-slate-400">{t.date} • {t.category}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <p className="font-mono text-slate-300">${t.amount.toLocaleString()}</p>
+                                <button onClick={() => handleStartInvoiceEdit(t)} className="p-1.5 text-slate-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Pencil size={12}/>
+                                </button>
+                            </div>
+                        </div>
+                      )
                   ))}
                   {newInvoices.length === 0 && (
                     <div className="text-center py-10 text-slate-500 text-sm">

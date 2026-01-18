@@ -1,45 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Input, Button, Select } from '../ui';
 import { Transaction } from '../../types';
 import { Sparkles, Pencil, Info, Wand2 } from 'lucide-react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../constants';
 import { parseTransactionInput } from '../../services/gemini';
 
-interface AddTransactionModalProps {
+interface TransactionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (t: Transaction) => void;
+  onSubmit: (t: Transaction) => void;
+  editingData?: Transaction | null;
   hasApiKey: boolean;
 }
 
-export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClose, onAdd, hasApiKey }) => {
+export const AddTransactionModal: React.FC<TransactionFormModalProps> = ({ isOpen, onClose, onSubmit, editingData, hasApiKey }) => {
   const [activeTab, setActiveTab] = useState<'AI' | 'MANUAL'>('AI');
   const [aiInputText, setAiInputText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [formData, setFormData] = useState<Partial<Transaction>>({
-    type: 'EXPENSE',
-    date: new Date().toISOString().split('T')[0],
-    category: '餐飲'
-  });
+  const [formData, setFormData] = useState<Partial<Transaction>>({});
 
-  // Reset state when opening (handled via useEffect in parent or simpler: just reset on close)
-  // Here we use a key or assume parent manages mounting, but for simplicity we reset if needed manually
-  // or we rely on the user to clear inputs. For better UX, we can use an effect.
-  
-  React.useEffect(() => {
+  const isEditing = !!editingData;
+
+  useEffect(() => {
     if (isOpen) {
-        setFormData({
-            type: 'EXPENSE',
-            date: new Date().toISOString().split('T')[0],
-            category: '餐飲',
-            item: '',
-            amount: undefined
-        });
-        setAiInputText('');
-        setActiveTab('AI');
+        if (isEditing) {
+            setFormData(editingData);
+            setActiveTab('MANUAL'); // Editing is always manual
+        } else {
+            // Reset for a new entry
+            setFormData({
+                type: 'EXPENSE',
+                date: new Date().toISOString().split('T')[0],
+                category: '餐飲',
+                item: '',
+                amount: undefined
+            });
+            setAiInputText('');
+            setActiveTab(hasApiKey ? 'AI' : 'MANUAL'); // Default to AI if available
+        }
     }
-  }, [isOpen]);
+  }, [isOpen, editingData, hasApiKey]);
 
   const handleAIAnalyze = async () => {
     if(!aiInputText.trim()) return;
@@ -60,47 +61,52 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const handleSubmit = () => {
     if (!formData.amount || !formData.item) return;
-    onAdd({
-        id: crypto.randomUUID(),
+    const transactionData = {
+        id: isEditing ? editingData.id : crypto.randomUUID(),
         date: formData.date || new Date().toISOString().split('T')[0],
         amount: Number(formData.amount),
         category: formData.category || '其他',
         item: formData.item,
         type: formData.type as 'EXPENSE' | 'INCOME',
-        source: 'MANUAL'
-    });
+        source: isEditing ? editingData.source : (activeTab === 'AI' ? 'AI_VOICE' : 'MANUAL'),
+        note: formData.note,
+        invoiceId: formData.invoiceId,
+    };
+    onSubmit(transactionData as Transaction);
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="新增收支">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "編輯紀錄" : "新增收支"}>
       <div className="space-y-6">
-         <div className="flex gap-2 p-1 bg-slate-900 rounded-xl border border-slate-700/50">
-             <button 
-                 onClick={() => setActiveTab('AI')}
-                 className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                     activeTab === 'AI' 
-                     ? 'bg-primary text-white shadow-md' 
-                     : 'text-slate-400 hover:text-white'
-                 }`}
-             >
-                 <Sparkles size={16} className={activeTab === 'AI' ? 'text-white' : 'text-cyan-400'}/>
-                 AI 智慧輸入
-             </button>
-             <button 
-                 onClick={() => setActiveTab('MANUAL')}
-                 className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                     activeTab === 'MANUAL' 
-                     ? 'bg-slate-700 text-white shadow-md' 
-                     : 'text-slate-400 hover:text-white'
-                 }`}
-             >
-                 <Pencil size={16}/>
-                 手動輸入
-             </button>
-         </div>
+         {!isEditing && (
+            <div className="flex gap-2 p-1 bg-slate-900 rounded-xl border border-slate-700/50">
+                <button 
+                    onClick={() => setActiveTab('AI')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                        activeTab === 'AI' 
+                        ? 'bg-primary text-white shadow-md' 
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                >
+                    <Sparkles size={16} className={activeTab === 'AI' ? 'text-white' : 'text-cyan-400'}/>
+                    AI 智慧輸入
+                </button>
+                <button 
+                    onClick={() => setActiveTab('MANUAL')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                        activeTab === 'MANUAL' 
+                        ? 'bg-slate-700 text-white shadow-md' 
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                >
+                    <Pencil size={16}/>
+                    手動輸入
+                </button>
+            </div>
+         )}
 
-         {activeTab === 'AI' ? (
+         {activeTab === 'AI' && !isEditing ? (
              <div className="space-y-4 animate-fade-in">
                  <div className="relative">
                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 to-cyan-500/5 rounded-xl pointer-events-none"></div>
@@ -183,7 +189,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
                  </div>
                  
                  <div className="pt-2">
-                    <Button className="w-full py-3" onClick={handleSubmit}>確認新增</Button>
+                    <Button className="w-full py-3" onClick={handleSubmit}>{isEditing ? '儲存變更' : '確認新增'}</Button>
                  </div>
              </div>
          )}

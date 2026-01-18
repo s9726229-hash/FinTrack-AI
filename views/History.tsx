@@ -1,14 +1,60 @@
 
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
   {
+    build: "5.6.0",
+    date: "2026-01-18",
+    title: "新功能：主列表交易編輯",
+    status: "verifying",
+    changes: [
+      {
+        icon: Pencil,
+        color: 'text-sky-400',
+        text: "**即時修正**: 在「收支記帳」主列表中，為每筆交易紀錄新增「編輯」按鈕，允許使用者隨時修改任何已存在的帳務。"
+      },
+      {
+        icon: FlaskConical,
+        color: 'text-amber-400',
+        text: "**程式碼重構**: 重構了交易表單元件 (`TransactionModals.tsx`)，使其能同時支援『新增』與『編輯』兩種模式，提升了程式碼的複用性。"
+      },
+       {
+        icon: Pointer,
+        color: 'text-emerald-400',
+        text: "**體驗一致性**: 編輯流程使用了與新增紀錄完全相同的介面，確保了操作體驗的一致與流暢。"
+      },
+    ]
+  },
+  {
+    build: "5.5.0",
+    date: "2026-01-18",
+    title: "新功能：匯入預覽編輯",
+    status: "verified",
+    changes: [
+      {
+        icon: FilePenLine,
+        color: 'text-sky-400',
+        text: "**預覽編輯**: 在電子發票匯入預覽視窗中，新增編輯功能，允許使用者在匯入前修改單筆交易的項目、類別與金額。"
+      },
+      {
+        icon: Edit,
+        color: 'text-amber-400',
+        text: "**彈性記帳**: 解決了 AI 自動分類偶有誤差，或需要手動調整合併/拆分項目金額時，無法即時修改的痛點。"
+      },
+       {
+        icon: Pointer,
+        color: 'text-emerald-400',
+        text: "**UI 優化**: 採用了行內表單 (inline form) 的方式進行編輯，操作流程流暢不中斷，提升使用者體驗。"
+      },
+    ]
+  },
+  {
     build: "5.4.1",
     date: "2026-01-18",
     title: "AI 智慧分類準確度提升 (提示工程優化)",
-    status: "verifying",
+    status: "verified",
     changes: [
       {
         icon: Bug,

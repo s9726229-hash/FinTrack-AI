@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { ArrowUpCircle, ArrowDownCircle, CheckCircle2, Search } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, CheckCircle2, Search, Pencil } from 'lucide-react';
 import { Transaction } from '../../types';
 
 interface TransactionListProps {
   transactions: Transaction[];
   onDelete: (id: string) => void;
+  onEdit: (t: Transaction) => void;
 }
 
-export const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
+export const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete, onEdit }) => {
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-bold text-slate-500 mb-2 pl-1 uppercase tracking-wider flex items-center gap-2">
@@ -37,6 +38,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
               <span className={`font-mono text-base font-bold whitespace-nowrap ${t.type === 'INCOME' ? 'text-emerald-400' : 'text-slate-200'}`}>
               {t.type === 'INCOME' ? '+' : '-'}${t.amount.toLocaleString()}
               </span>
+              <button onClick={() => onEdit(t)} className="p-1.5 text-slate-600 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">
+                  <Pencil size={14}/>
+              </button>
               <button onClick={() => onDelete(t.id)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">
                   <span className="sr-only">Delete</span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>

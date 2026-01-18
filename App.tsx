@@ -222,6 +222,14 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const updateTransaction = (t: Transaction) => {
+    const updated = transactions.map(txn => txn.id === t.id ? t : txn);
+    setTransactions(updated);
+    storage.saveTransactions(updated);
+    setToast({ message: `更新成功！${t.item}`, count: 1 });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const deleteTransaction = (id: string) => {
     const updated = transactions.filter(t => t.id !== id);
     setTransactions(updated);
@@ -269,7 +277,7 @@ export default function App() {
     <Layout currentView={view} onChangeView={setView}>
       {view === 'DASHBOARD' && <Dashboard assets={assets} transactions={transactions} stockSnapshots={stockSnapshots} recurring={recurring} />}
       {view === 'ASSETS' && <Assets assets={assets} onAdd={addAsset} onUpdate={updateAsset} onDelete={deleteAsset} />}
-      {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onDelete={deleteTransaction} />}
+      {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onUpdate={updateTransaction} onDelete={deleteTransaction} />}
       {view === 'BUDGET' && <Budget transactions={transactions} budgets={budgets} onUpdateBudgets={updateBudgets} />}
       {view === 'RECURRING' && <Recurring items={recurring} executedLog={recurringExecuted} onAdd={addRecurring} onExecute={executeRecurring} onDelete={deleteRecurring} />}
       {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} />}
