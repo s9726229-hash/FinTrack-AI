@@ -2,6 +2,7 @@
 import React from 'react';
 import { Modal, Input, Select, Button } from '../ui';
 import { Asset, AssetType, Currency } from '../../types';
+import { calculateLoanBalance } from '../../services/finance';
 import { Wallet, TrendingUp, Landmark, Bitcoin, Home, CreditCard, Coins, Calendar, Calculator } from 'lucide-react';
 
 interface AssetFormModalProps {
@@ -44,38 +45,9 @@ export const AssetFormModal: React.FC<AssetFormModalProps> = ({
       setFormData(newData);
   };
 
-  const calculateCurrentBalance = (): number | null => {
-    if (!formData.startDate || !formData.originalAmount) return null;
-
-    const principal = formData.originalAmount;
-    const annualRate = formData.interestRate || 2;
-    const totalYears = formData.termYears || 20;
-    const graceYears = formData.interestOnlyPeriod || 0;
-    
-    const now = new Date();
-    const start = new Date(formData.startDate);
-    const monthsPassed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-
-    if (monthsPassed < 0) return principal;
-
-    const graceMonths = graceYears * 12;
-    if (monthsPassed <= graceMonths) return principal;
-
-    const monthlyRate = (annualRate / 100) / 12;
-    const totalAmortizationMonths = (totalYears * 12) - graceMonths;
-    const paymentsMade = monthsPassed - graceMonths;
-
-    if (paymentsMade >= totalAmortizationMonths) return 0;
-    if (monthlyRate === 0) return principal * (1 - (paymentsMade / totalAmortizationMonths));
-
-    const factorN = Math.pow(1 + monthlyRate, totalAmortizationMonths);
-    const factorP = Math.pow(1 + monthlyRate, paymentsMade);
-
-    const remaining = principal * (factorN - factorP) / (factorN - 1);
-    return Math.round(remaining);
-  };
-
-  const calculatedPreview = formData.type === AssetType.DEBT ? calculateCurrentBalance() : null;
+  const calculatedPreview = formData.type === AssetType.DEBT && formData.startDate && formData.originalAmount 
+    ? calculateLoanBalance(formData as Asset) 
+    : null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={editingId ? "編輯資產" : "新增資產"}>

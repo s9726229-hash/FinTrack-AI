@@ -11,54 +11,9 @@ import { Investments } from './views/Investments';
 import { Budget } from './views/Budget'; // Import new view
 import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, Currency, BudgetConfig } from './types';
 import * as storage from './services/storage';
+import { calculateLoanBalance } from './services/finance'; // Centralized function
 import { CheckCircle2, X } from 'lucide-react';
 import { VoiceInputFab } from './components/VoiceInputFab'; // New Import
-
-// Helper: Calculate Remaining Loan Balance (Amortization)
-const calculateLoanBalance = (asset: Asset): number => {
-    if (asset.type !== AssetType.DEBT || !asset.startDate || !asset.originalAmount) {
-        return asset.amount;
-    }
-
-    const principal = asset.originalAmount;
-    const annualRate = asset.interestRate || 2; // Default 2%
-    const totalYears = asset.termYears || 20;
-    const graceYears = asset.interestOnlyPeriod || 0;
-    
-    const now = new Date();
-    const start = new Date(asset.startDate);
-    
-    // Calculate months passed
-    const monthsPassed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-
-    if (monthsPassed < 0) return principal; // Future loan
-
-    const graceMonths = graceYears * 12;
-
-    // Phase 1: Grace Period (Interest Only) - Principal doesn't drop
-    if (monthsPassed <= graceMonths) {
-        return principal;
-    }
-
-    // Phase 2: Repayment (Amortization)
-    
-    const monthlyRate = (annualRate / 100) / 12;
-    const totalAmortizationMonths = (totalYears * 12) - graceMonths;
-    const paymentsMade = monthsPassed - graceMonths;
-
-    if (paymentsMade >= totalAmortizationMonths) return 0; // Paid off
-    if (monthlyRate === 0) {
-        // Simple linear reduction if interest is 0 (rare but possible)
-        return principal * (1 - (paymentsMade / totalAmortizationMonths));
-    }
-
-    const factorN = Math.pow(1 + monthlyRate, totalAmortizationMonths);
-    const factorP = Math.pow(1 + monthlyRate, paymentsMade);
-
-    const remaining = principal * (factorN - factorP) / (factorN - 1);
-    
-    return Math.round(remaining);
-};
 
 export default function App() {
   const [view, setView] = useState<ViewState>('DASHBOARD');
@@ -98,7 +53,8 @@ export default function App() {
     const newAssets = assets.map(asset => {
         if (asset.type === AssetType.DEBT && asset.startDate && asset.originalAmount) {
             const calculatedBalance = calculateLoanBalance(asset);
-            if (Math.abs(calculatedBalance - asset.amount) > 10) {
+            // Check if update is significant to avoid unnecessary re-renders
+            if (Math.abs(calculatedBalance - asset.amount) > 1) { // Loosened to 1 for small monthly changes
                 updatedCount++;
                 return { ...asset, amount: calculatedBalance, lastUpdated: Date.now() };
             }
@@ -112,8 +68,9 @@ export default function App() {
         setToast({ message: `已自動更新 ${updatedCount} 筆貸款的本月剩餘本金`, count: updatedCount });
         setTimeout(() => setToast(null), 5000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assets.length]); 
+  // BUG FIX: Changed dependency from [assets.length] to [assets]
+  // This ensures updates trigger on asset EDIT, not just add/delete.
+  }, [assets]); 
 
   // --- Auto-Execute Logic (Check on Load & Data Change) ---
   useEffect(() => {
@@ -278,6 +235,19 @@ export default function App() {
   };
 
   const executeRecurring = (item: RecurringItem, date: string) => {
+    const newTransaction: Transaction = {
+      id: crypto.randomUUID(),
+      date: date,
+      amount: item.amount,
+      category: item.category,
+      item: `[手動] ${item.name}`,
+      type: item.type,
+      note: '系統手動入帳 (Manual Execution)',
+      source: 'MANUAL',
+    };
+    addTransaction(newTransaction);
+    setToast({ message: `已手動執行固定項目: ${item.name}`, count: 1 });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const deleteRecurring = (id: string) => {

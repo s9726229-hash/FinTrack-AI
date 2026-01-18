@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Asset, AssetType, Currency } from '../types';
 import { ASSET_TYPE_LABELS } from '../constants';
 import { getHistory } from '../services/storage';
+import { calculateLoanBalance } from '../services/finance'; // Centralized function
 import { Wallet, Plus, PieChart as PieIcon, BarChart3 } from 'lucide-react';
 
 // New Components
@@ -19,43 +20,6 @@ interface AssetsProps {
 
 type FilterType = 'ALL' | 'INVEST' | 'CASH' | 'DEBT';
 type ChartTab = 'ALLOCATION' | 'TREND';
-
-// Helper to calculate balance inside modal logic is now in Modal component
-// But we still need this logic for saving? 
-// No, we can move the calculation logic to the component or keep it here if needed for saving logic.
-// The previous refactoring moved `calculateCurrentBalance` INSIDE the modal for preview.
-// But we need to calculate it HERE for saving. Let's create a helper.
-
-const calculateBalanceForSave = (formData: Partial<Asset>): number | null => {
-    if (!formData.startDate || !formData.originalAmount) return null;
-
-    const principal = formData.originalAmount;
-    const annualRate = formData.interestRate || 2;
-    const totalYears = formData.termYears || 20;
-    const graceYears = formData.interestOnlyPeriod || 0;
-    
-    const now = new Date();
-    const start = new Date(formData.startDate);
-    const monthsPassed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-
-    if (monthsPassed < 0) return principal;
-
-    const graceMonths = graceYears * 12;
-    if (monthsPassed <= graceMonths) return principal;
-
-    const monthlyRate = (annualRate / 100) / 12;
-    const totalAmortizationMonths = (totalYears * 12) - graceMonths;
-    const paymentsMade = monthsPassed - graceMonths;
-
-    if (paymentsMade >= totalAmortizationMonths) return 0;
-    if (monthlyRate === 0) return principal * (1 - (paymentsMade / totalAmortizationMonths));
-
-    const factorN = Math.pow(1 + monthlyRate, totalAmortizationMonths);
-    const factorP = Math.pow(1 + monthlyRate, paymentsMade);
-
-    const remaining = principal * (factorN - factorP) / (factorN - 1);
-    return Math.round(remaining);
-};
 
 export const Assets: React.FC<AssetsProps> = ({ assets, onAdd, onUpdate, onDelete }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -160,12 +124,9 @@ export const Assets: React.FC<AssetsProps> = ({ assets, onAdd, onUpdate, onDelet
     
     let finalAmount = Number(formData.amount);
     if (formData.type === AssetType.DEBT) {
-        const calculated = calculateBalanceForSave(formData);
-        if (calculated !== null) {
-            finalAmount = calculated;
-        } else {
-             finalAmount = Number(formData.originalAmount);
-        }
+        // Use the centralized calculation logic
+        const calculated = calculateLoanBalance(formData as Asset);
+        finalAmount = calculated;
     } else if (formData.currency === Currency.TWD) {
         finalAmount = Number(formData.originalAmount);
     }

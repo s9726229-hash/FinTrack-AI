@@ -1,5 +1,5 @@
 {
-  "name": "FinTrack AI V5.3",
+  "name": "FinTrack AI",
   "description": "全方位的 AI 個人財務追蹤器，V5.3 新增 AI 語音記帳功能，支援自然語言快速輸入。",
   "requestFramePermissions": [
     "microphone"
