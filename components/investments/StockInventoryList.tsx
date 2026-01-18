@@ -54,11 +54,11 @@ export const StockInventoryList: React.FC<StockInventoryListProps> = ({ currentS
                                     <td className="p-4 text-right font-mono font-bold text-white">${p.marketValue.toLocaleString()}</td>
                                     <td className={`p-4 text-right font-mono font-bold ${(p.unrealizedPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                         <div className="flex flex-col items-end">
-                                            <span>{(p.unrealizedPL || 0) > 0 ? '+' : ''}{p.unrealizedPL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            <span>{(p.unrealizedPL || 0) > 0 ? '+' : ''}{p.unrealizedPL.toLocaleString()}</span>
                                             <span className={`text-[10px] px-1.5 rounded ${
                                                 (p.unrealizedPL || 0) >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
                                             }`}>
-                                                {p.returnRate != null ? `${p.returnRate.toFixed(2)}%` : (
+                                                {p.returnRate ? `${p.returnRate}%` : (
                                                     `${((p.unrealizedPL / (p.marketValue - p.unrealizedPL)) * 100).toFixed(2)}%`
                                                 )}
                                             </span>
@@ -114,12 +114,12 @@ export const StockInventoryList: React.FC<StockInventoryListProps> = ({ currentS
 
                                 <div className={`text-right ${(p.unrealizedPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                     <div className="font-mono font-bold text-sm">
-                                        {(p.unrealizedPL || 0) > 0 ? '+' : ''}{p.unrealizedPL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        {(p.unrealizedPL || 0) > 0 ? '+' : ''}{p.unrealizedPL.toLocaleString()}
                                     </div>
                                     <div className={`text-[10px] font-bold mt-0.5 inline-block px-1.5 rounded ${
                                         (p.unrealizedPL || 0) >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'
                                     }`}>
-                                            {p.returnRate != null ? `${p.returnRate.toFixed(2)}%` : (
+                                            {p.returnRate ? `${p.returnRate}%` : (
                                             `${((p.unrealizedPL / (p.marketValue - p.unrealizedPL)) * 100).toFixed(2)}%`
                                         )}
                                     </div>

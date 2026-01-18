@@ -1,60 +1,14 @@
 
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil, Camera, FileImage, ScanSearch } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
   {
-    build: "5.8.0",
-    date: "2026-01-18",
-    title: "AI 模型降級與體驗優化",
-    status: "verifying",
-    changes: [
-      {
-        icon: Wrench,
-        color: 'text-sky-400',
-        text: "**模型降級**: 為回應使用者需求，將「AI 截圖匯入」功能改用免費的 `gemini-2.5-flash-image` 模型，移除了對付費專案金鑰的依賴。"
-      },
-      {
-        icon: ShieldCheck,
-        color: 'text-emerald-400',
-        text: "**體驗簡化**: 移除了複雜的金鑰選擇流程，現在所有使用者都能直接使用 AI 庫存辨識功能，操作更直觀。"
-      },
-      {
-        icon: Edit,
-        color: 'text-amber-400',
-        text: "**顯示優化**: 根據使用者建議，將投資頁面中的「未實現損益」金額統一格式化至小數點後兩位，提升數據閱讀的精確性。"
-      },
-    ]
-  },
-  {
-    build: "5.7.0",
-    date: "2026-01-18",
-    title: "新功能：AI 智慧庫存匯入 (截圖辨識)",
-    status: "verified",
-    changes: [
-      {
-        icon: Camera,
-        color: 'text-sky-400',
-        text: "**截圖匯入**: 於「股票投資」頁面新增「AI 截圖匯入」功能，允許使用者上傳券商 App 的庫存截圖。"
-      },
-      {
-        icon: ScanSearch,
-        color: 'text-amber-400',
-        text: "**Gemini Vision AI**: 整合了 Gemini Vision Pro 模型，能自動分析截圖中的文字與排版，提取出股票名稱、代號、股數與成本等關鍵資訊。"
-      },
-       {
-        icon: FileImage,
-        color: 'text-emerald-400',
-        text: "**預覽與校正**: 在正式匯入前，提供一個預覽視窗讓使用者校對 AI 的辨識結果，並可直接進行修改，確保資料的準確性。"
-      },
-    ]
-  },
-  {
     build: "5.6.0",
     date: "2026-01-18",
     title: "新功能：主列表交易編輯",
-    status: "verified",
+    status: "verifying",
     changes: [
       {
         icon: Pencil,

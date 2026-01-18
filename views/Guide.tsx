@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   BookOpen, Mic, Sparkles, BrainCircuit, Wand2, Calculator, Target, 
   LayoutGrid, PieChart, ScrollText, CalendarClock, TrendingUp, Cloud,
-  UploadCloud, FilePenLine, Pencil, Camera
+  UploadCloud, FilePenLine, Pencil
 } from 'lucide-react';
 
 const FeatureSection = ({ title, color, children }: { title: string; color: string; children: React.ReactNode }) => (
@@ -37,15 +37,7 @@ export const GuideView: React.FC = () => {
       </div>
 
       <div className="relative border-l-2 border-slate-800 space-y-12">
-        <FeatureSection title="V5.7 最新功能" color="text-lime-400">
-            <FeatureItem 
-                icon={Camera} 
-                title="AI 智慧庫存匯入" 
-                description="在「股票投資」頁面，上傳您的券商庫存截圖，Gemini Vision AI 將自動辨識圖片內容，轉換為結構化持股資料，並讓您在匯入前進行預覽與校正。" 
-            />
-        </FeatureSection>
-        
-        <FeatureSection title="V5.6 功能" color="text-rose-400">
+        <FeatureSection title="V5.6 最新功能" color="text-rose-400">
             <FeatureItem 
                 icon={Pencil} 
                 title="主列表交易編輯" 

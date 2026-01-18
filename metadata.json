@@ -1,7 +1,7 @@
 
 {
   "name": "FinTrack AI",
-  "description": "全方位的 AI 個人財務追蹤器，V5.8 優化 AI 庫存匯入體驗，並提升顯示精確度。",
+  "description": "全方位的 AI 個人財務追蹤器，V5.6 新增主列表編輯功能，隨時修正您的每筆帳務。",
   "requestFramePermissions": [
     "microphone"
   ]

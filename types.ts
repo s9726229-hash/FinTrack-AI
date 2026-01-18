@@ -150,17 +150,3 @@ export interface IWindow extends Window {
   webkitSpeechRecognition: any;
   SpeechRecognition: any;
 }
-
-// FIX: To resolve the type conflict error for `aistudio`, the `AIStudio` interface is
-// moved inside the `declare global` block. This makes it a true global type instead of a
-// module-scoped export, which prevents naming collisions with other global declarations.
-declare global {
-  interface AIStudio {
-    hasSelectedApiKey: () => Promise<boolean>;
-    openSelectKey: () => Promise<void>;
-  }
-
-  interface Window {
-    aistudio?: AIStudio;
-  }
-}
