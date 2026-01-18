@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ViewState } from '../types';
+import { ViewState, ApiKeyStatus } from '../types';
 import { Sidebar } from './layout/Sidebar';
 import { MobileHeader } from './layout/MobileHeader';
 import { MobileBottomNav } from './layout/MobileBottomNav';
@@ -9,14 +9,15 @@ interface LayoutProps {
   children: React.ReactNode;
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
+  apiKeyStatus: ApiKeyStatus;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeView }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeView, apiKeyStatus }) => {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col md:flex-row font-sans">
       
       {/* Desktop Sidebar */}
-      <Sidebar currentView={currentView} onChangeView={onChangeView} />
+      <Sidebar currentView={currentView} onChangeView={onChangeView} apiKeyStatus={apiKeyStatus} />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">

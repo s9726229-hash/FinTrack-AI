@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   BookOpen, Mic, Sparkles, BrainCircuit, Wand2, Calculator, Target, 
   LayoutGrid, PieChart, ScrollText, CalendarClock, TrendingUp, Cloud,
-  UploadCloud, FilePenLine, Pencil
+  UploadCloud, FilePenLine, Pencil, Wifi
 } from 'lucide-react';
 
 const FeatureSection = ({ title, color, children }: { title: string; color: string; children: React.ReactNode }) => (
@@ -37,7 +37,15 @@ export const GuideView: React.FC = () => {
       </div>
 
       <div className="relative border-l-2 border-slate-800 space-y-12">
-        <FeatureSection title="V5.6 最新功能" color="text-rose-400">
+        <FeatureSection title="V5.7 最新功能" color="text-rose-400">
+            <FeatureItem 
+                icon={Wifi} 
+                title="AI 連線狀態指示燈 (V5.7.1 強化)" 
+                description="在側邊欄版本號旁新增了 API 金鑰狀態指示燈與文字標示 (AI上線/離線)，讓您隨時掌握 AI 功能的可用性。" 
+            />
+        </FeatureSection>
+        
+        <FeatureSection title="V5.6 功能" color="text-teal-400">
             <FeatureItem 
                 icon={Pencil} 
                 title="主列表交易編輯" 
@@ -45,7 +53,7 @@ export const GuideView: React.FC = () => {
             />
         </FeatureSection>
 
-        <FeatureSection title="V5.5 功能" color="text-teal-400">
+        <FeatureSection title="V5.5 功能" color="text-sky-400">
             <FeatureItem 
                 icon={FilePenLine} 
                 title="匯入預覽編輯" 

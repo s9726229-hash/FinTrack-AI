@@ -1,14 +1,55 @@
 
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil, Wifi, Layers, CircleDot, MessageSquareText } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
   {
+    build: "5.7.1",
+    date: "2026-01-18",
+    title: "優化：AI 狀態指示燈文字顯示",
+    status: "verifying",
+    changes: [
+      {
+        icon: MessageSquareText,
+        color: 'text-sky-400',
+        text: "**UI/UX 優化**: 根據使用者回饋，在側邊欄的 AI 狀態指示燈旁增加了『AI 上線/離線/驗證中』等文字標示，讓連線狀態更加直觀易懂。"
+      },
+      {
+        icon: Wrench,
+        color: 'text-amber-400',
+        text: "**SOP 遵循**: 此項小型介面優化，已遵循版本發布 SOP，提升修訂號 (Patch) 至 `5.7.1`，並同步更新所有相關文件。"
+      },
+    ]
+  },
+  {
+    build: "5.7.0",
+    date: "2026-01-18",
+    title: "新功能：全域 AI 狀態指示燈",
+    status: "verified",
+    changes: [
+      {
+        icon: Wifi,
+        color: 'text-sky-400',
+        text: "**即時狀態**: 在側邊欄新增 API 金鑰狀態指示燈，讓使用者能隨時掌握 AI 服務的連線狀態 (上線/離線/驗證中)。"
+      },
+      {
+        icon: Layers,
+        color: 'text-amber-400',
+        text: "**狀態提升 (State Lifting)**: 將 API 金鑰的驗證邏輯與狀態從設定頁面提升至最頂層的 App 元件，實現全域狀態共享。"
+      },
+       {
+        icon: CircleDot,
+        color: 'text-emerald-400',
+        text: "**UI/UX 優化**: 提供了直觀的視覺回饋（綠/紅/黃燈），並在系統設定頁面保留了狀態顯示，確保了資訊的清晰與一致性。"
+      },
+    ]
+  },
+  {
     build: "5.6.0",
     date: "2026-01-18",
     title: "新功能：主列表交易編輯",
-    status: "verifying",
+    status: "verified",
     changes: [
       {
         icon: Pencil,

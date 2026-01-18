@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ViewState } from '../../types';
+import { ViewState, ApiKeyStatus } from '../../types';
 import { 
   LayoutGrid, PieChart, ScrollText, Target, CalendarClock, TrendingUp, 
   Bot, Settings, BookOpen
@@ -9,7 +9,25 @@ import {
 interface SidebarProps {
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
+  apiKeyStatus: ApiKeyStatus;
 }
+
+const ApiKeyStatusIndicator = ({ status }: { status: ApiKeyStatus }) => {
+    const statusConfig = {
+        unchecked: { color: 'bg-slate-500', textColor: 'text-slate-500', pulse: false, label: '未啟用', tooltip: 'AI 未啟用：未設定 API Key' },
+        verifying: { color: 'bg-amber-500', textColor: 'text-amber-500', pulse: true, label: '驗證中', tooltip: 'AI 狀態：正在驗證...' },
+        valid: { color: 'bg-emerald-500', textColor: 'text-emerald-500', pulse: false, label: 'AI 上線', tooltip: 'AI 上線：金鑰有效' },
+        invalid: { color: 'bg-red-500', textColor: 'text-red-500', pulse: false, label: 'AI 離線', tooltip: 'AI 離線：金鑰無效' },
+    };
+    const { color, textColor, pulse, label, tooltip } = statusConfig[status];
+
+    return (
+        <div title={tooltip} className="flex items-center gap-1.5 ml-2 cursor-help">
+            <div className={`w-2 h-2 rounded-full ${color} ${pulse ? 'animate-pulse' : ''} transition-colors`}></div>
+            <span className={`text-[10px] font-bold ${textColor}`}>{label}</span>
+        </div>
+    );
+};
 
 const NavItem = ({ 
   view, current, icon: Icon, label, onClick 
@@ -32,7 +50,7 @@ const NavItem = ({
   );
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, apiKeyStatus }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 p-6 border-r border-slate-800 h-screen sticky top-0 bg-[#0f172a] shrink-0">
       <div className="flex items-center gap-3 mb-10 px-2">
@@ -43,7 +61,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) =
           <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
             FinTrack AI
           </h1>
-          <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">V5.6.0</span>
+          <div className="flex items-center">
+            <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">V5.7.1</span>
+            <ApiKeyStatusIndicator status={apiKeyStatus} />
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,6 @@
-
 {
-  "name": "FinTrack AI",
-  "description": "全方位的 AI 個人財務追蹤器，V5.6 新增主列表編輯功能，隨時修正您的每筆帳務。",
+  "name": "FinTrack AI V5.7",
+  "description": "全方位的 AI 個人財務追蹤器，V5.7.1 強化 AI 狀態顯示文字，讓連線狀態更直觀。",
   "requestFramePermissions": [
     "microphone"
   ]

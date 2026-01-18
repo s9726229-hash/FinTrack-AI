@@ -145,6 +145,8 @@ export interface LocalStorageData {
 
 export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'BUDGET' | 'GUIDE' | 'HISTORY' | 'SETTINGS';
 
+export type ApiKeyStatus = 'unchecked' | 'valid' | 'invalid' | 'verifying';
+
 // --- Web Speech API Types ---
 export interface IWindow extends Window {
   webkitSpeechRecognition: any;

@@ -7,14 +7,15 @@ import { Transactions } from './views/Transactions';
 import { Recurring } from './views/Recurring';
 import { Settings } from './views/Settings';
 import { HistoryView } from './views/History';
-import { GuideView } from './views/Guide'; // New Import
+import { GuideView } from './views/Guide';
 import { Investments } from './views/Investments';
-import { Budget } from './views/Budget'; // Import new view
-import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, Currency, BudgetConfig } from './types';
+import { Budget } from './views/Budget';
+import { ViewState, Asset, Transaction, RecurringItem, AssetType, StockSnapshot, BudgetConfig, ApiKeyStatus } from './types';
 import * as storage from './services/storage';
-import { calculateLoanBalance } from './services/finance'; // Centralized function
+import { verifyApiKey } from './services/gemini';
+import { calculateLoanBalance } from './services/finance';
 import { CheckCircle2, X } from 'lucide-react';
-import { VoiceInputFab } from './components/VoiceInputFab'; // New Import
+import { VoiceInputFab } from './components/VoiceInputFab';
 
 export default function App() {
   const [view, setView] = useState<ViewState>('DASHBOARD');
@@ -25,26 +26,36 @@ export default function App() {
   const [recurring, setRecurring] = useState<RecurringItem[]>([]);
   const [recurringExecuted, setRecurringExecuted] = useState<Record<string, string[]>>({});
   const [stockSnapshots, setStockSnapshots] = useState<StockSnapshot[]>([]);
-  const [budgets, setBudgets] = useState<BudgetConfig[]>([]); // New State
-  const [apiKey, setApiKey] = useState<string>(''); // Track API key for voice button
+  const [budgets, setBudgets] = useState<BudgetConfig[]>([]);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus>('unchecked');
   
   // Global Toast State
   const [toast, setToast] = useState<{message: string, count: number} | null>(null);
 
-  // Load Data Function (Soft Refresh)
-  const refreshData = () => {
+  const refreshData = useCallback(async () => {
     setAssets(storage.getAssets());
     setTransactions(storage.getTransactions());
     setRecurring(storage.getRecurring());
     setRecurringExecuted(storage.getRecurringExecuted());
     setStockSnapshots(storage.getStockSnapshots());
-    setBudgets(storage.getBudgets()); // Load Budgets
-    setApiKey(storage.getApiKey()); // Check key
-  };
+    setBudgets(storage.getBudgets());
+    
+    // Centralized API Key and Status Verification Logic
+    const key = storage.getApiKey();
+    setApiKey(key);
+    if (key) {
+      setApiKeyStatus('verifying');
+      const isValid = await verifyApiKey(key);
+      setApiKeyStatus(isValid ? 'valid' : 'invalid');
+    } else {
+      setApiKeyStatus('unchecked');
+    }
+  }, []);
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
 
   // --- Auto-Update Debt Balances (New V5.2) ---
   useEffect(() => {
@@ -54,8 +65,7 @@ export default function App() {
     const newAssets = assets.map(asset => {
         if (asset.type === AssetType.DEBT && asset.startDate && asset.originalAmount) {
             const calculatedBalance = calculateLoanBalance(asset);
-            // Check if update is significant to avoid unnecessary re-renders
-            if (Math.abs(calculatedBalance - asset.amount) > 1) { // Loosened to 1 for small monthly changes
+            if (Math.abs(calculatedBalance - asset.amount) > 1) {
                 updatedCount++;
                 return { ...asset, amount: calculatedBalance, lastUpdated: Date.now() };
             }
@@ -69,8 +79,6 @@ export default function App() {
         setToast({ message: `已自動更新 ${updatedCount} 筆貸款的本月剩餘本金`, count: updatedCount });
         setTimeout(() => setToast(null), 5000);
     }
-  // BUG FIX: Changed dependency from [assets.length] to [assets]
-  // This ensures updates trigger on asset EDIT, not just add/delete.
   }, [assets]); 
 
   // --- Auto-Execute Logic (Check on Load & Data Change) ---
@@ -79,9 +87,9 @@ export default function App() {
 
     const today = new Date();
     const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1; // 1-12
+    const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
-    const currentMonthKey = today.toISOString().substring(0, 7); // YYYY-MM
+    const currentMonthKey = today.toISOString().substring(0, 7);
 
     let newTransactions: Transaction[] = [];
     let newLog = { ...recurringExecuted };
@@ -138,11 +146,10 @@ export default function App() {
         setToast({ message: `已自動為您補入 ${executedCount} 筆本月到期的固定帳務`, count: executedCount });
         setTimeout(() => setToast(null), 5000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recurring]);
+  }, [recurring, recurringExecuted]);
 
   // --- Snapshot Logic ---
-  const checkAndTakeSnapshot = () => {
+  const checkAndTakeSnapshot = useCallback(() => {
     const currentAssets = storage.getAssets();
     if (currentAssets.length === 0) return;
 
@@ -153,11 +160,11 @@ export default function App() {
     if (!lastSnapshot || lastSnapshot.date !== today) {
        takeSnapshot(currentAssets);
     }
-  }
+  }, []);
 
   useEffect(() => {
      checkAndTakeSnapshot();
-  }, [assets]); 
+  }, [assets, checkAndTakeSnapshot]); 
 
   const takeSnapshot = (currentAssets: Asset[]) => {
      let assetsVal = 0;
@@ -213,7 +220,6 @@ export default function App() {
 
   // Transaction Handlers
   const addTransaction = (t: Transaction) => {
-    // Get latest to avoid race condition if possible (though state is fast enough here)
     const latest = storage.getTransactions();
     const updated = [...latest, t];
     setTransactions(updated);
@@ -274,7 +280,7 @@ export default function App() {
   };
 
   return (
-    <Layout currentView={view} onChangeView={setView}>
+    <Layout currentView={view} onChangeView={setView} apiKeyStatus={apiKeyStatus}>
       {view === 'DASHBOARD' && <Dashboard assets={assets} transactions={transactions} stockSnapshots={stockSnapshots} recurring={recurring} />}
       {view === 'ASSETS' && <Assets assets={assets} onAdd={addAsset} onUpdate={updateAsset} onDelete={deleteAsset} />}
       {view === 'TRANSACTIONS' && <Transactions transactions={transactions} onAdd={addTransaction} onUpdate={updateTransaction} onDelete={deleteTransaction} />}
@@ -283,12 +289,10 @@ export default function App() {
       {view === 'INVESTMENTS' && <Investments snapshots={stockSnapshots} />}
       {view === 'GUIDE' && <GuideView />}
       {view === 'HISTORY' && <HistoryView />}
-      {view === 'SETTINGS' && <Settings onDataChange={refreshData} />}
+      {view === 'SETTINGS' && <Settings onDataChange={refreshData} apiKeyStatus={apiKeyStatus} />}
 
-      {/* Global Voice Input Button (Always visible) */}
       <VoiceInputFab onAddTransaction={addTransaction} hasApiKey={!!apiKey} />
 
-      {/* Global Toast Notification */}
       {toast && (
         <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 z-[60] animate-fade-in">
            <div className="bg-white/20 p-1 rounded-full">

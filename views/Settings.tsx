@@ -3,13 +3,33 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Input } from '../components/ui';
 import { exportData, importData, clearAllData, getGoogleClientId, saveGoogleClientId, getApiKey, saveApiKey } from '../services/storage';
 import { initGapi, initGis, handleAuthClick, uploadToDrive, downloadFromDrive, getBackupMetadata, checkConnection } from '../services/googleDrive';
-import { Download, Upload, CheckCircle2, AlertCircle, X, Cloud, RefreshCw, LogIn, Copy, History, Trash2, Key, Eye, EyeOff, Sparkles, ExternalLink } from 'lucide-react';
+import { Download, Upload, CheckCircle2, AlertCircle, X, Cloud, RefreshCw, LogIn, History, Trash2, Key, Eye, EyeOff, Sparkles, ExternalLink } from 'lucide-react';
+import { ApiKeyStatus } from '../types';
 
 interface SettingsProps {
   onDataChange: () => void;
+  apiKeyStatus: ApiKeyStatus;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
+const ApiKeyStatusIndicator = ({ status }: { status: ApiKeyStatus }) => {
+    const statusConfig = {
+        unchecked: { color: 'bg-slate-500', pulse: false, text: '未設定金鑰' },
+        verifying: { color: 'bg-amber-500', pulse: true, text: '正在驗證...' },
+        valid: { color: 'bg-emerald-500', pulse: false, text: '金鑰有效，AI 功能已啟用' },
+        invalid: { color: 'bg-red-500', pulse: false, text: '金鑰無效或已過期' },
+    };
+    const { color, pulse, text } = statusConfig[status];
+
+    return (
+        <div title={text} className="flex items-center gap-1.5 ml-2">
+            <div className={`w-2.5 h-2.5 rounded-full ${color} ${pulse ? 'animate-pulse' : ''} transition-colors`}></div>
+            <span className="text-xs text-slate-400">{text}</span>
+        </div>
+    );
+};
+
+
+export const Settings: React.FC<SettingsProps> = ({ onDataChange, apiKeyStatus }) => {
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
   
   // API Key State
@@ -22,15 +42,16 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
   const [isDriveLoading, setIsDriveLoading] = useState(false);
 
   useEffect(() => {
-    // Load API Key
-    setApiKey(getApiKey());
-
-    // Load Drive Settings
+    // Load existing settings on mount
+    const storedApiKey = getApiKey();
+    setApiKey(storedApiKey);
+    
     const storedClientId = getGoogleClientId();
     if (storedClientId) {
         setGoogleClientId(storedClientId);
         autoInitDrive(storedClientId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const autoInitDrive = async (clientId: string) => {
@@ -51,13 +72,15 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
   };
 
   const handleSaveApiKey = () => {
-      if (!apiKey.trim()) {
-          showNotify('error', 'API Key 不能為空');
-          return;
+      const trimmedKey = apiKey.trim();
+      saveApiKey(trimmedKey);
+      onDataChange(); // Trigger App-level refresh and verification
+      
+      if (trimmedKey) {
+          showNotify('success', 'Gemini API Key 已儲存！正在驗證...');
+      } else {
+          showNotify('error', 'API Key 已清除');
       }
-      saveApiKey(apiKey.trim());
-      showNotify('success', 'Gemini API Key 已儲存並啟用！');
-      onDataChange();
   };
 
   const handleSaveClientId = () => {
@@ -138,8 +161,8 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
           if (success) {
              setApiKey(getApiKey());
              setGoogleClientId(getGoogleClientId());
+             onDataChange(); // Trigger full refresh and verification
              showNotify('success', '匯入成功！');
-             onDataChange();
           } else {
              showNotify('error', '格式錯誤');
           }
@@ -156,7 +179,7 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
         setApiKey('');
         setGoogleClientId('');
         setIsDriveConnected(false);
-        onDataChange();
+        onDataChange(); // Trigger full refresh
         showNotify('success', '系統已重置。');
     }
   };
@@ -194,9 +217,12 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
               </a>
           </div>
           <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 space-y-4">
-              <p className="text-sm text-slate-400">
-                  請輸入您的 Google Gemini API Key 以啟用 AI 語音記帳、自動分類與財務建議功能。金鑰僅會儲存於您的瀏覽器本地端。
-              </p>
+              <div className="flex justify-between items-center">
+                  <p className="text-sm text-slate-400">
+                      請輸入您的 Google Gemini API Key 以啟用所有 AI 功能。
+                  </p>
+                  <ApiKeyStatusIndicator status={apiKeyStatus} />
+              </div>
               <div className="flex gap-2">
                   <div className="relative flex-1">
                       <div className="absolute left-3 top-3 text-slate-500">
@@ -219,10 +245,6 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
                   <Button onClick={handleSaveApiKey} className="shrink-0 bg-cyan-600 hover:bg-cyan-500 shadow-lg shadow-cyan-900/20">
                       儲存設定
                   </Button>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                  <CheckCircle2 size={12} className={apiKey ? "text-emerald-500" : "text-slate-600"}/>
-                  {apiKey ? "API Key 已設定，AI 功能已就緒" : "尚未設定 API Key，AI 功能暫停使用"}
               </div>
           </div>
       </Card>
@@ -307,7 +329,7 @@ export const Settings: React.FC<SettingsProps> = ({ onDataChange }) => {
       </Card>
 
       <div className="text-center text-[10px] text-slate-600 pb-4">
-          <p>FinTrack AI V5.3 • Gemini Engine • Powered by Google Generative AI</p>
+          <p>FinTrack AI V5.7 • Gemini Engine • Powered by Google Generative AI</p>
       </div>
     </div>
   );

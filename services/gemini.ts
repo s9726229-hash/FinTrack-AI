@@ -6,12 +6,36 @@ import { EXPENSE_CATEGORIES } from '../constants';
 
 // Helper to get AI instance dynamically with the latest key
 const getAI = () => {
-    const key = process.env.API_KEY || getApiKey();
+    // Vite exposes env variables via import.meta.env
+    const key = import.meta.env.VITE_API_KEY || getApiKey();
     if (!key) {
-        console.warn("API Key is missing. Please set it in Settings.");
+        console.warn("API Key is missing. You can set it in Settings or via a VITE_API_KEY environment variable for local development.");
     }
+    // Prevent crash if key is missing during initialization
     return new GoogleGenAI({ apiKey: key || 'dummy_key_to_prevent_crash' });
 };
+
+/**
+ * Verifies if a given Gemini API key is valid by making a small test request.
+ * @param key The API key to verify.
+ * @returns A boolean indicating if the key is valid.
+ */
+export const verifyApiKey = async (key: string): Promise<boolean> => {
+  if (!key) return false;
+  try {
+    const ai = new GoogleGenAI({ apiKey: key });
+    // Use a simple, fast, and cheap model for the verification request.
+    await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: 'test',
+    });
+    return true;
+  } catch (error) {
+    console.error("API Key verification failed:", error);
+    return false;
+  }
+};
+
 
 // Helper: Clean JSON string (remove markdown code blocks)
 const cleanJsonString = (text: string | undefined | null): string => {
