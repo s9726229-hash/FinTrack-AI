@@ -1,16 +1,15 @@
-
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# FinTrack AI v5.7.1
+# FinTrack AI v5.9.2
 
 This repository contains the complete source code for the FinTrack AI personal finance tracker application. It's a client-side web application built with React, TypeScript, and Vite, powered by the Google Gemini API.
 
 ## ✨ Features
 
 - **AI-Powered Insights**: Voice-to-transaction, intelligent categorization, financial health reports, and more.
-- **Comprehensive Tracking**: Manage assets, debts, transactions, recurring payments, and stock investments.
+- **Comprehensive Tracking**: Manage assets, debts, transactions, and recurring payments.
 - **Data Privacy**: All data is stored locally in your browser.
 - **Cloud Sync**: Optional, secure backup and sync via your personal Google Drive.
 - **PWA Ready**: Installable on mobile devices for an app-like experience.

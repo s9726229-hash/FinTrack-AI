@@ -1,4 +1,5 @@
 
+
 export enum Currency {
   TWD = 'TWD',
   USD = 'USD',
@@ -18,6 +19,19 @@ export enum AssetType {
   OTHER = 'OTHER',
 }
 
+export interface StockTransaction {
+  id: string;
+  date: string; // YYYY-MM-DD from '成交日期'
+  symbol: string; // from '股票代號'
+  side: 'BUY' | 'SELL'; // from '買賣別'
+  tradeType: string; // from '交易種類' e.g. '普通', '盤中零股'
+  shares: number; // from '成交數量'
+  price: number; // from '成交價'
+  fees: number; // sum of 手續費 + 交易稅 + 二代健保補充費
+  realizedProfit?: number; // from '損益', only for sells
+  amount: number; // 應收付帳款
+}
+
 export interface Asset {
   id: string;
   name: string;
@@ -27,12 +41,35 @@ export interface Asset {
   currency: Currency;
   exchangeRate: number; // To TWD
   lastUpdated: number; // Timestamp
+  
   // Debt specific
   startDate?: string; // YYYY-MM-DD (New V5.2)
   interestRate?: number;
   termYears?: number;
   paidYears?: number; // Deprecated in favor of startDate calculation, but kept for compatibility
   interestOnlyPeriod?: number; // Grace period in years (New V5.2)
+
+  // --- V5.9.5 Stock Specific ---
+  symbol?: string;
+  shares?: number;
+  avgCost?: number;
+  currentPrice?: number;
+  stockCategory?: string; // e.g., 'ETF', '半導體'
+  yield?: number; // Dividend yield %
+  isEtf?: boolean;
+  // -----------------------------
+}
+
+export interface StockPosition {
+    id: string;
+    name?: string;
+    symbol?: string;
+    shares?: number;
+    avgCost?: number;
+    currentPrice?: number;
+    marketValue?: number;
+    unrealizedPL?: number;
+    unrealizedPLPercent?: number;
 }
 
 export interface Transaction {
@@ -58,12 +95,10 @@ export interface RecurringItem {
   monthOfYear?: number; // 1-12, for YEARLY
 }
 
-// --- V5.2 Budget Feature ---
 export interface BudgetConfig {
   category: string;
   limit: number;
 }
-// --------------------------
 
 export interface PurchaseAssessment {
   score: number; // 0-100 (100 is safe)
@@ -80,28 +115,20 @@ export interface PortfolioSnapshot {
   assetDistribution: Record<AssetType, number>;
 }
 
-export interface StockPosition {
-  symbol: string;     // e.g., 2330
-  name: string;       // e.g., 台積電
-  shares: number;     // 股數
-  cost: number;       // 平均成本
-  currentPrice: number; // 現價
-  marketValue: number;  // 市值
-  unrealizedPL: number; // 未實現損益
-  returnRate: number;   // 報酬率 %
-  // V5.1 Dividend Info
-  dividendYield?: number;
-  dividendAmount?: number;
-  dividendFrequency?: string;
+export interface StockSnapshot {
+  date: string; // YYYY-MM-DD
+  totalMarketValue: number;
 }
 
-export interface StockSnapshot {
-  id: string;
-  date: string;       // YYYY-MM-DD
-  timestamp: number;
-  totalMarketValue: number;
-  totalUnrealizedPL: number;
-  positions: StockPosition[];
+export interface StockPerformanceResult {
+  totalCost: number;
+  marketValue: number;
+  estimatedReturn: number;
+  netProfit: number;
+  roi: number;
+  buyFee: number;
+  sellFee: number;
+  tax: number;
 }
 
 export interface AIReportData {
@@ -118,11 +145,6 @@ export interface AIReportData {
     status: string;
     suggestion: string;
   }[];
-  investmentSuggestions: {
-    action: 'KEEP' | 'SELL' | 'BUY';
-    target: string;
-    reason: string;
-  }[];
   summary: string;
 }
 
@@ -137,17 +159,18 @@ export interface LocalStorageData {
   ft_recurring: RecurringItem[];
   ft_recurring_executed: Record<string, string[]>;
   ft_portfolio_history: PortfolioSnapshot[];
-  ft_stock_snapshots: StockSnapshot[];
   ft_budgets: BudgetConfig[]; // New V5.2
   ft_api_key: string;
   ft_google_client_id: string; // New Cloud Sync
+  ft_stock_history: StockSnapshot[]; // New V5.9.3
+  ft_stock_transactions: StockTransaction[]; // New V6.3.0
+  ft_stock_fee_discount: number; // New V5.9.3
 }
 
-export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'INVESTMENTS' | 'BUDGET' | 'GUIDE' | 'HISTORY' | 'SETTINGS';
+export type ViewState = 'DASHBOARD' | 'ASSETS' | 'TRANSACTIONS' | 'RECURRING' | 'BUDGET' | 'GUIDE' | 'HISTORY' | 'SETTINGS' | 'INVESTMENTS';
 
 export type ApiKeyStatus = 'unchecked' | 'valid' | 'invalid' | 'verifying';
 
-// --- Web Speech API Types ---
 export interface IWindow extends Window {
   webkitSpeechRecognition: any;
   SpeechRecognition: any;

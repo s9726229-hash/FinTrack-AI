@@ -1,6 +1,6 @@
 {
-  "name": "FinTrack AI V5.7",
-  "description": "全方位的 AI 個人財務追蹤器，V5.7.1 強化 AI 狀態顯示文字，讓連線狀態更直觀。",
+  "name": "FinTrack AI V6.6.0",
+  "description": "FinTrack AI V6.6.0 - 智慧流程重構：語音記帳導入「先看後記」確認機制，支援長語音持續辨識與多筆交易批次解析。",
   "requestFramePermissions": [
     "microphone"
   ]

@@ -5,8 +5,10 @@ export const STORAGE_KEYS = {
   RECURRING: 'ft_recurring',
   RECURRING_EXECUTED: 'ft_recurring_executed',
   HISTORY: 'ft_portfolio_history',
-  STOCK_SNAPSHOTS: 'ft_stock_snapshots',
   BUDGETS: 'ft_budgets', // New V5.2
+  STOCK_HISTORY: 'ft_stock_history', // New V5.9.3
+  STOCK_TRANSACTIONS: 'ft_stock_transactions', // New V6.3.0
+  FEE_DISCOUNT: 'ft_stock_fee_discount', // New V5.9.3
 };
 
 export const EXCHANGE_RATES_DEFAULT = {
@@ -16,7 +18,7 @@ export const EXCHANGE_RATES_DEFAULT = {
 };
 
 export const EXPENSE_CATEGORIES = [
-  '餐飲', '交通', '娛樂', '購物', '居住', '帳單', '醫療', '教育', '家庭', '投資', '其他'
+  '餐飲', '交通', '娛樂', '購物', '居住', '帳單', '醫療', '教育', '家庭', '其他'
 ];
 
 export const INCOME_CATEGORIES = [

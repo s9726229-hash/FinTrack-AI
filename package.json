@@ -1,8 +1,7 @@
-
 {
   "name": "fintrack-ai",
   "private": true,
-  "version": "5.7.1",
+  "version": "6.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
