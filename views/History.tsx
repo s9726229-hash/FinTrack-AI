@@ -1,330 +1,106 @@
-
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil, Wifi, Layers, CircleDot, MessageSquareText } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil, Wifi, Layers, CircleDot, MessageSquareText, Camera, Zap, FileSearch, Trash2, TrendingUp, Calculator, GitMerge, UserCheck, Code, Scissors, Timer, Download, RefreshCw, Rocket, AppWindow, Columns, Paintbrush, SlidersHorizontal, Split, Gauge, LayoutGrid, Key, Filter, ClipboardList, MicVocal } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
   {
-    build: "5.7.1",
-    date: "2026-01-18",
-    title: "優化：AI 狀態指示燈文字顯示",
+    build: "6.6.0",
+    date: "2026-02-17",
+    title: "語音引擎重大更新",
     status: "verifying",
     changes: [
       {
-        icon: MessageSquareText,
-        color: 'text-sky-400',
-        text: "**UI/UX 優化**: 根據使用者回饋，在側邊欄的 AI 狀態指示燈旁增加了『AI 上線/離線/驗證中』等文字標示，讓連線狀態更加直觀易懂。"
-      },
-      {
-        icon: Wrench,
-        color: 'text-amber-400',
-        text: "**SOP 遵循**: 此項小型介面優化，已遵循版本發布 SOP，提升修訂號 (Patch) 至 `5.7.1`，並同步更新所有相關文件。"
-      },
-    ]
-  },
-  {
-    build: "5.7.0",
-    date: "2026-01-18",
-    title: "新功能：全域 AI 狀態指示燈",
-    status: "verified",
-    changes: [
-      {
-        icon: Wifi,
-        color: 'text-sky-400',
-        text: "**即時狀態**: 在側邊欄新增 API 金鑰狀態指示燈，讓使用者能隨時掌握 AI 服務的連線狀態 (上線/離線/驗證中)。"
-      },
-      {
-        icon: Layers,
-        color: 'text-amber-400',
-        text: "**狀態提升 (State Lifting)**: 將 API 金鑰的驗證邏輯與狀態從設定頁面提升至最頂層的 App 元件，實現全域狀態共享。"
-      },
-       {
-        icon: CircleDot,
-        color: 'text-emerald-400',
-        text: "**UI/UX 優化**: 提供了直觀的視覺回饋（綠/紅/黃燈），並在系統設定頁面保留了狀態顯示，確保了資訊的清晰與一致性。"
-      },
-    ]
-  },
-  {
-    build: "5.6.0",
-    date: "2026-01-18",
-    title: "新功能：主列表交易編輯",
-    status: "verified",
-    changes: [
-      {
-        icon: Pencil,
-        color: 'text-sky-400',
-        text: "**即時修正**: 在「收支記帳」主列表中，為每筆交易紀錄新增「編輯」按鈕，允許使用者隨時修改任何已存在的帳務。"
-      },
-      {
-        icon: FlaskConical,
-        color: 'text-amber-400',
-        text: "**程式碼重構**: 重構了交易表單元件 (`TransactionModals.tsx`)，使其能同時支援『新增』與『編輯』兩種模式，提升了程式碼的複用性。"
-      },
-       {
-        icon: Pointer,
-        color: 'text-emerald-400',
-        text: "**體驗一致性**: 編輯流程使用了與新增紀錄完全相同的介面，確保了操作體驗的一致與流暢。"
-      },
-    ]
-  },
-  {
-    build: "5.5.0",
-    date: "2026-01-18",
-    title: "新功能：匯入預覽編輯",
-    status: "verified",
-    changes: [
-      {
-        icon: FilePenLine,
-        color: 'text-sky-400',
-        text: "**預覽編輯**: 在電子發票匯入預覽視窗中，新增編輯功能，允許使用者在匯入前修改單筆交易的項目、類別與金額。"
-      },
-      {
-        icon: Edit,
-        color: 'text-amber-400',
-        text: "**彈性記帳**: 解決了 AI 自動分類偶有誤差，或需要手動調整合併/拆分項目金額時，無法即時修改的痛點。"
-      },
-       {
-        icon: Pointer,
-        color: 'text-emerald-400',
-        text: "**UI 優化**: 採用了行內表單 (inline form) 的方式進行編輯，操作流程流暢不中斷，提升使用者體驗。"
-      },
-    ]
-  },
-  {
-    build: "5.4.1",
-    date: "2026-01-18",
-    title: "AI 智慧分類準確度提升 (提示工程優化)",
-    status: "verified",
-    changes: [
-      {
-        icon: Bug,
+        icon: MicVocal,
         color: 'text-rose-400',
-        text: "**問題修正**: 修正了發票匯入時 AI 分類不精準的問題。例如，飲料店被錯誤歸類為「購物」。"
+        text: "修復文字重複疊加 Bug，支援**長語音持續辨識**與**多筆交易批次 AI 解析**。"
+      }
+    ]
+  },
+  {
+    build: "6.5.0",
+    date: "2026-02-16",
+    title: "介面重構與功能同步",
+    status: "verified",
+    changes: [
+      {
+        icon: SlidersHorizontal,
+        color: 'text-sky-400',
+        text: "交易篩選器全面中文化，新增**半年**與自定義日期區間，並導入即時查詢區間標籤。"
       },
       {
-        icon: BrainCircuit,
+        icon: GitMerge,
+        color: 'text-teal-400',
+        text: "功能同步：將進階日期篩選器整合至股票交易明細，實現收支與投資模組的一致性操作。"
+      }
+    ]
+  },
+  {
+    build: "6.4.1",
+    date: "2026-02-15",
+    title: "修正庫存匯入 Bug",
+    status: "verified",
+    changes: [
+      {
+        icon: GitMerge,
         color: 'text-sky-400',
-        text: "**提示工程 (Prompt Engineering)**: 建立專屬的分類 AI 函式，並在指令中明確提供預設的支出類別清單，將 AI 的『開放式猜測』轉變為『有標準選項的選擇題』。"
+        text: "**優化股票代號比對**：重構庫存匯入的合併邏輯，現在能正確比對不同補 0 格式的股票代號（例如 `878` 與 `00878`），確保資料能正確覆蓋更新。"
       },
-       {
+      {
         icon: Wrench,
         color: 'text-amber-400',
-        text: "**上下文優化**: 現在會將發票的前 3 個品項名稱一同提供給 AI，以增加判斷線索，提升在複合式店家消費時的分類準確性。"
-      },
+        text: "**修正數值覆蓋邏輯**：修復當匯入的 CSV 檔案中包含 `0`（例如庫存為 0）時，無法正確更新現有數據的問題。"
+      }
     ]
   },
   {
-    build: "5.4.0",
-    date: "2026-01-18",
-    title: "新功能：電子發票 CSV 匯入",
+    build: "6.4.0",
+    date: "2026-02-14",
+    title: "新功能：支援股票庫存 CSV 匯入",
     status: "verified",
     changes: [
       {
-        icon: FileUp,
-        color: 'text-sky-400',
-        text: "**快速匯入**: 於「收支記帳」頁面新增「匯入電子發票」功能，支援財政部平台的標準 CSV 格式，大幅簡化記帳流程。"
-      },
-      {
-        icon: Sparkles,
-        color: 'text-violet-400',
-        text: "**AI 智慧分類**: 匯入時，Gemini AI 會根據店家名稱與品項自動判斷最適當的消費類別，省去手動設定的麻煩。"
-      },
-       {
-        icon: ShieldCheck,
+        icon: ClipboardList,
         color: 'text-emerald-400',
-        text: "**重複偵測**: 系統會以「發票號碼」為唯一識別碼，自動跳過已存在的紀錄，確保資料的準確性與唯一性。"
-      },
+        text: "**新增功能**：支援完整版股票庫存匯入，可透過 CSV 檔案一次性同步所有持股的數量、現價與**成本均價**，實現更精準的自動化損益追蹤。"
+      }
     ]
   },
   {
-    build: "5.3.11",
-    date: "2026-01-18",
-    title: "擴展版本發布 SOP：納入介面版本號與網頁說明",
-    status: "verified",
-    changes: [
-      {
-        icon: Tags,
-        color: 'text-sky-400',
-        text: "**介面同步**: 根據使用者提醒，將「更新主介面版本號」納入新功能發布的標準流程，確保 `Sidebar.tsx` 中顯示的版本永遠與實際功能同步。"
-      },
-      {
-        icon: FileText,
-        color: 'text-emerald-400',
-        text: "**網頁說明同步**: 同步將「更新 `metadata.json` 的網頁說明」納入流程，確保應用程式的公開描述能準確反映最新功能。"
-      },
-       {
-        icon: ListTree,
-        color: 'text-amber-400',
-        text: "**流程固化**: 確立未來所有『新功能』發布，都將遵循包含『程式實作、版本號更新、UI同步、網頁說明、功能導覽、更新日誌』的完整六步驟SOP。"
-      },
-    ]
-  },
-  {
-    build: "5.3.10",
-    date: "2026-01-18",
-    title: "導入語意化版本控制系統",
+    build: "6.3.0",
+    date: "2026-02-13",
+    title: "重大重構：交易紀錄解耦 & CSV 解析強化",
     status: "verified",
     changes: [
       {
         icon: GitBranch,
-        color: 'text-sky-400',
-        text: "**流程標準化**: 建立並導入語意化版本控制 (Semantic Versioning) 系統，格式為 `主版號.次版號.修訂號`，以更精確地追蹤變更歷史。"
+        color: 'text-violet-400',
+        text: "架構重構：將股票交易紀錄 (`StockTransaction`) 從資產物件中分離，改為獨立的頂層資料表儲存，提升資料管理彈性。"
       },
       {
-        icon: PlusCircle,
-        color: 'text-emerald-400',
-        text: "**次版號 (Minor)**: 未來任何「新增功能」的請求，將會提升次版號。例如，從 `5.3.x` 升級至 `5.4.0`。"
+        icon: Filter,
+        color: 'text-green-400',
+        text: "**修復 CSV 解析 Bug**：強化解析引擎，改用正規表示式處理，能正確解析包含千分位逗號的欄位（如 `\"50,100\"`），大幅提升券商檔案相容性。"
       },
       {
-        icon: Wrench,
-        color: 'text-amber-400',
-        text: "**修訂號 (Patch)**: 任何「介面錯誤修改」、「小型優化」或「錯誤修正」，將會提升修訂號。例如，從 `5.3.10` 升級至 `5.3.11`。"
-      },
+        icon: GitMerge,
+        color: 'text-teal-400',
+        text: "**確保向後相容**：強化資料匯入功能，能自動偵測並遷移舊格式備份檔中的巢狀交易紀錄。"
+      }
     ]
   },
   {
-    build: "5.3.9",
-    date: "2026-01-18",
-    title: "重構功能導覽為獨立頁面",
+    build: "6.2.3",
+    date: "2026-02-12",
+    title: "功能強化：提升 CSV 解析器相容性",
     status: "verified",
     changes: [
       {
-        icon: LayoutPanelLeft,
+        icon: FileText,
         color: 'text-sky-400',
-        text: "**UI/UX 重構**: 根據使用者回饋，將「功能導覽」從側邊欄的收合式面板，升級為一個位於主畫面的獨立、完整的頁面，並參照設計稿優化視覺呈現。"
-      },
-      {
-        icon: ListTree,
-        color: 'text-cyan-400',
-        text: "**導覽簡化**: 側邊欄的「功能導覽」項目現在會直接連結至新的功能說明頁面，操作流程更直觀。"
-      },
+        text: "強化 CSV 解析器關鍵字辨識，支援更多元券商格式（如：**成交股數**、**發生金額**）。"
+      }
     ]
-  },
-  {
-    build: "5.3.8",
-    date: "2026-01-18",
-    title: "側邊欄重構：新增功能導覽與日誌簡化",
-    status: "verified",
-    changes: [
-      {
-        icon: ListTree,
-        color: 'text-sky-400',
-        text: "**日誌導覽簡化**: 根據使用者回饋，恢復「AI 調校日誌」為單純的導覽連結，移除預覽功能，使介面更簡潔。"
-      },
-      {
-        icon: BookOpen,
-        color: 'text-cyan-400',
-        text: "**新增功能導覽**: 於側邊欄加入可收合的「功能導覽」面板，依版本號清晰列出核心功能，協助使用者快速上手。"
-      },
-    ]
-  },
-  {
-    build: "5.3.7",
-    date: "2026-01-18",
-    title: "優化 AI 日誌導覽體驗",
-    status: "verified",
-    changes: [
-      {
-        icon: ListTree,
-        color: 'text-sky-400',
-        text: "**側邊欄優化**: 根據使用者回饋，將 AI 調校日誌的導覽項目改為可展開的選單，直接在側邊欄顯示最新的 3 筆更新紀錄，提升查閱便利性。"
-      },
-    ]
-  },
-  {
-    build: "5.3.6",
-    date: "2026-01-18",
-    title: "新增側邊欄功能導覽",
-    status: "verified",
-    changes: [
-      {
-        icon: BookOpen,
-        color: 'text-cyan-400',
-        text: "**功能導覽**: 於側邊欄新增可收合的功能導覽面板，依主要版本號 (V5.3, V5.2, 核心) 說明各項功能，提升使用者體驗與上手便利性。"
-      },
-    ]
-  },
-  {
-    build: "5.3.5",
-    date: "2026-01-18",
-    title: "優化日誌狀態顯示與說明",
-    status: "verified",
-    changes: [
-      {
-        icon: Info,
-        color: 'text-sky-400',
-        text: "**UX 優化**: 根據使用者回饋，為狀態標籤增加了懸停提示（Tooltip），明確解釋「驗證中」與「驗證通過」的具體含義，避免混淆。"
-      },
-    ]
-  },
-  {
-    build: "5.3.4",
-    date: "2026-01-18",
-    title: "系統時間感校正與日誌更新",
-    status: "verified",
-    changes: [
-      {
-        icon: CalendarCheck,
-        color: 'text-sky-400',
-        text: "**時間感校正**: 根據使用者提供的當前日期 (`2026-01-18`)，全面更新 AI 調校日誌的時間戳，確保紀錄的準確性。"
-      },
-    ]
-  },
-  {
-    build: "5.3.3",
-    date: "2026-01-15",
-    title: "AI 調校日誌日期校正",
-    status: "verified",
-    changes: [
-      {
-        icon: CalendarCheck,
-        color: 'text-sky-400',
-        text: "**日誌校正**: 根據使用者回饋，修正了 `Build 5.3.2` 的錯誤提交日期，並更新了其驗證狀態。"
-      },
-    ]
-  },
-  {
-    build: "5.3.2",
-    date: "2026-01-12",
-    title: "建構錯誤修正與程式碼一致性優化",
-    status: "verified",
-    changes: [
-      {
-        icon: Bug,
-        color: 'text-rose-400',
-        text: "**建構錯誤修正 (Build Fix)**: 解決了 `views/History.tsx` 中因不正確的模組路徑造成的 TypeScript 編譯錯誤。"
-      },
-      {
-        icon: FlaskConical,
-        color: 'text-sky-400',
-        text: "**程式碼一致性**: 將 AI 調校日誌頁面的卡片元件重構為使用全域共用的 `Card` 元件，提升了程式碼的可維護性與視覺一致性。"
-      },
-    ]
-  },
-  {
-    build: "5.3.1",
-    date: "2026-01-10",
-    title: "程式碼重構與錯誤修正",
-    status: "verified",
-    changes: [
-      {
-        icon: FlaskConical,
-        color: 'text-sky-400',
-        text: "**程式碼重構 (DRY)**: 統一所有貸款餘額計算邏輯至 `services/finance.ts`，消除重複程式碼並確保計算一致性。"
-      },
-      {
-        icon: Bug,
-        color: 'text-rose-400',
-        text: "**錯誤修正 (Bug Fix)**: 修正編輯貸款資產時，餘額不會立即更新的問題。現在任何變更都會即時反應。"
-      },
-      {
-        icon: Wrench,
-        color: 'text-amber-400',
-        text: "**功能補全**: 為 `executeRecurring` 函式補上完整邏輯，消除無效作用的程式碼。"
-      },
-    ]
-  },
+  }
 ];
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -361,7 +137,7 @@ export const HistoryView: React.FC = () => {
       </div>
 
       <div className="relative pl-4 border-l-2 border-slate-700 ml-4">
-        {logs.map((log, index) => (
+        {logs.slice(0, 10).map((log, index) => (
           <div key={index} className="mb-10 pl-8 relative">
             <div className="absolute -left-[11px] top-1 w-5 h-5 bg-slate-800 border-4 border-primary rounded-full ring-8 ring-slate-900"></div>
             

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Transaction, BudgetConfig, PurchaseAssessment } from '../types';
 import { EXPENSE_CATEGORIES } from '../constants';
@@ -117,20 +118,18 @@ export const Budget: React.FC<BudgetProps> = ({ transactions, budgets, onUpdateB
   };
 
   const handleAIAnalyze = async () => {
-      if (largeExpenses.length === 0) return;
-      setIsAnalyzing(true);
-      const result = await analyzeLargeExpenses(largeExpenses);
-      setAiAnalysis(result);
-      setIsAnalyzing(false);
+      // V5.9.1 - Temporarily disabled
+      return;
   };
 
   const handleAISuggestBudget = async () => {
-      setIsSuggesting(true);
-      const recurring = getRecurring();
-      const suggestions = await generateBudgetSuggestions(transactions, recurring, budgets);
-      setSuggestedBudgets(suggestions);
-      setShowBudgetSuggestionModal(true);
-      setIsSuggesting(false);
+      // V5.9.1 - Temporarily disabled
+      // setIsSuggesting(true);
+      // const recurring = getRecurring();
+      // const suggestions = await generateBudgetSuggestions(transactions, recurring, budgets);
+      // setSuggestedBudgets(suggestions);
+      // setShowBudgetSuggestionModal(true);
+      // setIsSuggesting(false);
   };
 
   const applyBudgetSuggestion = (suggestion: BudgetConfig) => {
@@ -151,14 +150,15 @@ export const Budget: React.FC<BudgetProps> = ({ transactions, budgets, onUpdateB
   };
 
   const handleSimulation = async () => {
-      if (!simScenario) return;
-      setIsSimulating(true);
-      const result = await evaluatePurchase(
-          financialContext,
-          simScenario
-      );
-      setSimResult(result);
-      setIsSimulating(false);
+      // V5.9.1 - Temporarily disabled
+      // if (!simScenario) return;
+      // setIsSimulating(true);
+      // const result = await evaluatePurchase(
+      //     financialContext,
+      //     simScenario
+      // );
+      // setSimResult(result);
+      // setIsSimulating(false);
   };
 
   const totalPercent = totalBudgetLimit > 0 ? (trackedSpend / totalBudgetLimit) * 100 : 0;
@@ -182,10 +182,11 @@ export const Budget: React.FC<BudgetProps> = ({ transactions, budgets, onUpdateB
          </div>
          <Button 
             onClick={handleAISuggestBudget} 
-            disabled={!hasApiKey || isSuggesting}
-            className="bg-gradient-to-r from-violet-600 to-primary border border-violet-400/30 text-white shadow-lg shadow-violet-500/20"
+            disabled={true}
+            title="此功能將於股票模組完善後重新規劃"
+            className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-700 shadow-none disabled:text-slate-400"
          >
-            {isSuggesting ? '計算中...' : 'AI 智慧預算建議'} <Wand2 size={16} className="ml-1"/>
+            AI 建議 (規劃中) <Wand2 size={16} className="ml-1"/>
          </Button>
       </div>
 
@@ -314,10 +315,11 @@ export const Budget: React.FC<BudgetProps> = ({ transactions, budgets, onUpdateB
                           {!aiAnalysis && (
                               <button 
                                 onClick={handleAIAnalyze} 
-                                disabled={isAnalyzing || !hasApiKey}
-                                className="text-[10px] bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-2 py-1 rounded disabled:opacity-50 transition-colors"
+                                disabled={true}
+                                title="此功能將於股票模組完善後重新規劃"
+                                className="text-[10px] bg-slate-700/50 text-slate-500 px-2 py-1 rounded disabled:opacity-50 transition-colors cursor-not-allowed"
                               >
-                                  {isAnalyzing ? '...' : '分析消費'}
+                                  規劃中
                               </button>
                           )}
                       </div>
@@ -327,7 +329,7 @@ export const Budget: React.FC<BudgetProps> = ({ transactions, budgets, onUpdateB
                           </p>
                       ) : (
                           <p className="text-[10px] text-slate-500">
-                              點擊分析以獲取省錢建議。
+                              AI 分析功能規劃中。
                           </p>
                       )}
                   </div>
@@ -356,11 +358,12 @@ export const Budget: React.FC<BudgetProps> = ({ transactions, budgets, onUpdateB
               {!simResult ? (
                   <Button 
                     onClick={handleSimulation} 
-                    disabled={isSimulating || !hasApiKey || !simScenario}
-                    className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700"
+                    disabled={true}
+                    title="此功能將於股票模組完善後重新規劃"
+                    className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-700 cursor-not-allowed disabled:text-slate-400"
                     loading={isSimulating}
                   >
-                     {hasApiKey ? 'AI 壓力測試' : '請設定 API Key'} <Calculator size={16} className="ml-1"/>
+                     AI 壓力測試 (規劃中) <Calculator size={16} className="ml-1"/>
                   </Button>
               ) : (
                   <div className="animate-fade-in space-y-3">

@@ -1,12 +1,12 @@
-
 import React from 'react';
 import { 
   BookOpen, Mic, Sparkles, BrainCircuit, Wand2, Calculator, Target, 
-  LayoutGrid, PieChart, ScrollText, CalendarClock, TrendingUp, Cloud,
-  UploadCloud, FilePenLine, Pencil, Wifi
+  LayoutGrid, PieChart, ScrollText, CalendarClock, Cloud,
+  UploadCloud, FilePenLine, Pencil, Wifi, TrendingUp, Zap, Info,
+  Clock, UserCheck, ShieldCheck, GitMerge, Scissors, AppWindow, Columns, Archive, FileSearch, Layers, Paintbrush, Split, ReceiptText, ListTree, ArrowRightLeft, Key, Filter, FileText, GitBranch, ClipboardList, SlidersHorizontal, MicVocal
 } from 'lucide-react';
 
-const FeatureSection = ({ title, color, children }: { title: string; color: string; children: React.ReactNode }) => (
+const FeatureSection = ({ title, color, children }: { title: string; color: string; children?: React.ReactNode }) => (
     <div className="relative pl-8">
         <div className="absolute left-0 top-1.5 w-3 h-3 bg-slate-700 rounded-full border-2 border-slate-900 ring-4 ring-slate-700"></div>
         <h3 className={`text-sm font-bold uppercase tracking-widest mb-6 ${color}`}>{title}</h3>
@@ -37,81 +37,42 @@ export const GuideView: React.FC = () => {
       </div>
 
       <div className="relative border-l-2 border-slate-800 space-y-12">
-        <FeatureSection title="V5.7 最新功能" color="text-rose-400">
+        <FeatureSection title="V6.6.0 功能 (語音記帳升級)" color="text-rose-400">
             <FeatureItem 
-                icon={Wifi} 
-                title="AI 連線狀態指示燈 (V5.7.1 強化)" 
-                description="在側邊欄版本號旁新增了 API 金鑰狀態指示燈與文字標示 (AI上線/離線)，讓您隨時掌握 AI 功能的可用性。" 
+                icon={MicVocal}
+                title="智慧流程重構：批次語音記帳" 
+                description="語音記帳導入『先看後記』確認機制，支援長語音持續辨識（例如：早餐50元、午餐120、買咖啡90...），並可一次性解析多筆交易，大幅提升記帳效率與準確度。"
             />
         </FeatureSection>
         
-        <FeatureSection title="V5.6 功能" color="text-teal-400">
+        <FeatureSection title="V6.5.0 功能 (日期篩選升級)" color="text-sky-400">
             <FeatureItem 
-                icon={Pencil} 
-                title="主列表交易編輯" 
-                description="現在您可以直接在「收支記帳」的主列表中，點擊任一筆已存在的交易紀錄進行編輯，隨時修正類別、金額或日期，讓帳務保持絕對精確。" 
-            />
-        </FeatureSection>
-
-        <FeatureSection title="V5.5 功能" color="text-sky-400">
-            <FeatureItem 
-                icon={FilePenLine} 
-                title="匯入預覽編輯" 
-                description="在確認匯入電子發票前，您可以直接在預覽視窗中修改單筆交易的消費類別、金額或項目名稱，確保每一筆帳都符合您的實際情況。" 
+                icon={SlidersHorizontal}
+                title="精準的時間軸分析" 
+                description="交易篩選器已全面升級，提供『月、季、半年、年度』等快捷選項，並強化自定義日期區間選擇。新增的即時查詢區間標籤，讓您對當前分析的數據範圍一目了然。"
             />
         </FeatureSection>
         
-        <FeatureSection title="V5.4 功能" color="text-amber-400">
+        <FeatureSection title="V6.4.0 功能 (庫存匯入)" color="text-emerald-400">
             <FeatureItem 
-                icon={UploadCloud} 
-                title="電子發票 CSV 匯入 (V5.4.1 強化)" 
-                description="從財政部平台下載發票 CSV 檔後，可一鍵匯入所有交易。系統將自動排除重複紀錄，並利用優化後的 AI 智慧判斷消費類別，準確度大幅提升。" 
+                icon={ClipboardList}
+                title="支援完整股票庫存匯入" 
+                description="新增了『匯入股票庫存』功能，可直接從券商的庫存快照 CSV 檔案，一次性同步所有持股的『股數』、『成本均價』與『現價』，大幅簡化了初次設定與後續校對的流程。"
+            />
+        </FeatureSection>
+
+        <FeatureSection title="V6.3.0 功能 (架構重構 & Bug 修復)" color="text-violet-400">
+            <FeatureItem 
+                icon={GitBranch}
+                title="庫存與交易明細解耦" 
+                description="重構了核心資料架構，將股票的『庫存狀態』與『歷史交易紀錄』完全分離。現在所有交易紀錄都獨立存儲，使資產物件更輕量，資料管理更具彈性。"
             />
         </FeatureSection>
         
-        <FeatureSection title="V5.3 功能" color="text-cyan-400">
-            <FeatureItem 
-                icon={Mic} 
-                title="AI 語音記帳" 
-                description="透過懸浮按鈕，用自然語言（例如：昨天星巴克 150 元）快速新增收支，AI 自動為您解析並記錄。" 
-            />
-            <FeatureItem 
-                icon={Sparkles} 
-                title="AI 智慧輸入" 
-                description="在傳統記帳視窗中，直接輸入一句話，AI 也能將其轉換為結構化的交易紀錄，兼顧速度與彈性。" 
-            />
-            <FeatureItem 
-                icon={BrainCircuit} 
-                title="AI 財務精算師" 
-                description="儀表板的專屬財務顧問。整合您的資產、負債與收支，進行現金流壓力測試，並提供個人化的投資組合與債務管理建議。" 
-            />
-        </FeatureSection>
-
-        <FeatureSection title="V5.2 核心 AI 強化" color="text-slate-400">
-            <FeatureItem 
-                icon={Target} 
-                title="預算與分析" 
-                description="設定各消費類別的月度預算，並透過「購買評估模擬器」在消費前評估該決策對財務狀況的影響。" 
-            />
-            <FeatureItem 
-                icon={Wand2} 
-                title="智慧預算建議" 
-                description="不確定預算該如何設定？讓 AI 分析您的歷史消費數據，自動建議各類別中最適合您的合理預算上限。" 
-            />
-            <FeatureItem 
-                icon={Calculator} 
-                title="貸款自動攤提" 
-                description="設定房貸、信貸的起始日期、利率與年期後，系統將每月自動計算並更新您的貸款餘額，無需再手動調整。" 
-            />
-        </FeatureSection>
-
         <FeatureSection title="核心功能" color="text-slate-500">
-            <FeatureItem icon={LayoutGrid} title="總覽儀表板" description="整合所有財務數據，一覽淨資產、總資產與總負債的即時狀況與歷史趨勢。" />
-            <FeatureItem icon={PieChart} title="資產管理" description="追蹤包括現金、股票、基金、房地產、加密貨幣及負債等多種類別的資產。" />
-            <FeatureItem icon={ScrollText} title="收支記帳" description="提供詳盡的收支紀錄功能，並搭配強大的篩選器與視覺化圖表，深入了解您的金錢流向。" />
-            <FeatureItem icon={CalendarClock} title="固定收支管理" description="輕鬆管理訂閱服務、房租、薪水等定期帳務，系統會在指定日期自動為您入帳，避免遺漏。" />
-            <FeatureItem icon={TrendingUp} title="股票投資追蹤" description="監控您的持股組合，自動計算即時市值與未實現損益，掌握投資績效。" />
-            <FeatureItem icon={Cloud} title="雲端同步 & 備份" description="透過您的個人 Google Drive 帳號，安全地在雲端備份與還原您的所有財務資料，實現跨裝置同步。" />
+            <FeatureItem icon={BrainCircuit} title="AI 補完持股資訊" description="在您輸入完股票基本資料後，點擊一下，AI 會在背景為所有不完整的持股批次補上「名稱、現價、類別、殖利率」等詳細數據。" />
+            <FeatureItem icon={UploadCloud} title="電子發票 CSV 匯入" description="從財政部平台下載發票 CSV 檔後，可一鍵匯入所有交易，並利用 AI 智慧判斷消費類別。" />
+            <FeatureItem icon={Cloud} title="雲端同步 & 備份" description="透過您的個人 Google Drive 帳號，安全地在雲端備份與還原您的所有財務資料。" />
         </FeatureSection>
       </div>
     </div>

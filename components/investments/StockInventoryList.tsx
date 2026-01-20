@@ -1,135 +1,140 @@
 
+
 import React from 'react';
-import { StockSnapshot } from '../../types';
-import { PieChart as PieIcon, Camera, Landmark } from 'lucide-react';
+import { Asset } from '../../types';
+import { List, Edit2, Trash2, Info, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { calculateStockPerformance } from '../../services/stock';
 
 interface StockInventoryListProps {
-  currentSnapshot: StockSnapshot | null;
+    inventory: Asset[];
+    totalMarketValue: number;
+    onEdit: (asset: Asset) => void;
+    onDelete: (id: string) => void;
+    enrichingIds: string[];
+    onEnrichSingle: (id: string) => void;
 }
 
-export const StockInventoryList: React.FC<StockInventoryListProps> = ({ currentSnapshot }) => {
-  return (
-    <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-4 border-b border-slate-700 bg-slate-800/80 flex justify-between items-center backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <PieIcon size={20} className="text-violet-400"/> 當前持股明細
+export const StockInventoryList: React.FC<StockInventoryListProps> = ({ inventory, totalMarketValue, onEdit, onDelete, enrichingIds, onEnrichSingle }) => {
+    
+    const formatDate = (timestamp: number | undefined) => {
+        if (!timestamp) return '-';
+        try {
+            return new Date(timestamp).toLocaleDateString('sv-SE'); // YYYY-MM-DD
+        } catch {
+            return '-';
+        }
+    };
+
+    return (
+        <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden h-full flex flex-col">
+            <h3 className="text-sm font-bold text-slate-300 p-4 border-b border-slate-700 flex items-center gap-2">
+                <List size={16} className="text-violet-400" />
+                庫存明細
             </h3>
-            <span className="text-xs font-normal text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-700">
-                共 {currentSnapshot?.positions.length || 0} 檔
-            </span>
-        </div>
-        
-        {!currentSnapshot ? (
-            <div className="py-20 text-center flex flex-col items-center justify-center text-slate-500">
-                <Camera size={48} className="mb-4 opacity-20"/>
-                <p className="text-sm">尚無庫存資料</p>
-                <p className="text-xs opacity-60 mt-1">目前暫無數據展示</p>
-            </div>
-        ) : (
-            <>
-                {/* Desktop View: Table */}
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-900/50 text-slate-400 text-xs uppercase font-semibold">
-                            <tr>
-                                <th className="p-4 rounded-tl-lg">股名 / 代號</th>
-                                <th className="p-4 text-right">股數</th>
-                                <th className="p-4 text-right">現價</th>
-                                <th className="p-4 text-right">成本</th>
-                                <th className="p-4 text-right">庫存市值</th>
-                                <th className="p-4 text-right">未實現損益</th>
-                                <th className="p-4 text-center">股利政策</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-700/50">
-                            {currentSnapshot.positions.map((p, i) => (
-                                <tr key={i} className="hover:bg-slate-700/20 transition-colors group">
-                                    <td className="p-4">
-                                        <div className="font-bold text-slate-200">{p.name}</div>
-                                        <div className="text-xs text-slate-500 font-mono mt-0.5">{p.symbol}</div>
-                                    </td>
-                                    <td className="p-4 text-right font-mono text-slate-300">{p.shares.toLocaleString()}</td>
-                                    <td className="p-4 text-right font-mono text-slate-300">${p.currentPrice}</td>
-                                    <td className="p-4 text-right font-mono text-slate-500">${p.cost}</td>
-                                    <td className="p-4 text-right font-mono font-bold text-white">${p.marketValue.toLocaleString()}</td>
-                                    <td className={`p-4 text-right font-mono font-bold ${(p.unrealizedPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        <div className="flex flex-col items-end">
-                                            <span>{(p.unrealizedPL || 0) > 0 ? '+' : ''}{p.unrealizedPL.toLocaleString()}</span>
-                                            <span className={`text-[10px] px-1.5 rounded ${
-                                                (p.unrealizedPL || 0) >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
-                                            }`}>
-                                                {p.returnRate ? `${p.returnRate}%` : (
-                                                    `${((p.unrealizedPL / (p.marketValue - p.unrealizedPL)) * 100).toFixed(2)}%`
-                                                )}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        {p.dividendYield ? (
-                                            <div className="inline-flex flex-col items-center">
-                                                <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                                                    {p.dividendYield}%
-                                                </span>
-                                                <span className="text-[10px] text-slate-500 mt-1">{p.dividendFrequency}</span>
+            <div className="overflow-auto flex-1">
+                <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 z-10">
+                        <tr className="bg-slate-900/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <th className="p-3 font-medium">名稱/代號</th>
+                            <th className="p-3 font-medium text-right">成本/現價</th>
+                            <th className="p-3 font-medium text-right hidden lg:table-cell">持有股數</th>
+                            <th className="p-3 font-medium text-right">持有市值</th>
+                            <th className="p-3 font-medium text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                    未實現損益
+                                    <div title="已扣除預估手續費與證交稅" className="cursor-help">
+                                        <Info size={12} />
+                                    </div>
+                                </div>
+                            </th>
+                            <th className="p-3 font-medium text-right hidden sm:table-cell">最後更新</th>
+                            <th className="p-3 font-medium text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50 text-sm">
+                        {inventory.map(pos => {
+                            const performance = calculateStockPerformance(pos);
+                            const isGain = performance.netProfit >= 0;
+                            const isEnriching = enrichingIds.includes(pos.id);
+                            
+                            const STALE_THRESHOLD = 14 * 24 * 60 * 60 * 1000;
+                            const isStale = !pos.lastUpdated || (Date.now() - (pos.lastUpdated || 0)) > STALE_THRESHOLD;
+                            const weight = totalMarketValue > 0 ? (performance.marketValue / totalMarketValue) * 100 : 0;
+
+                            return (
+                                <tr key={pos.id} className="hover:bg-slate-700/30 transition-colors group">
+                                    <td className="p-3">
+                                        {isEnriching ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 size={14} className="animate-spin text-slate-500" />
+                                                <div className="text-slate-400">查詢中...</div>
                                             </div>
                                         ) : (
-                                            <span className="text-slate-600 text-xs">-</span>
+                                            <div>
+                                                <div className="font-bold text-white flex items-center gap-2">{pos.name}</div>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <div className="text-xs text-slate-500 font-mono">{pos.symbol}</div>
+                                                    {pos.stockCategory && 
+                                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${
+                                                            pos.isEtf ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' : 'bg-slate-700 text-slate-300 border-slate-600'
+                                                        }`}>
+                                                            {pos.stockCategory}
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
                                         )}
                                     </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Mobile View: Compact List */}
-                <div className="md:hidden divide-y divide-slate-700/50">
-                    {currentSnapshot.positions.map((p, i) => (
-                        <div key={i} className="p-4 hover:bg-slate-700/20 active:bg-slate-700/30 transition-colors">
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-bold text-white text-base">{p.name}</span>
-                                    <span className="text-xs text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded font-mono">{p.symbol}</span>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-mono font-bold text-white text-base">${p.marketValue.toLocaleString()}</div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-end">
-                                <div className="space-y-1">
-                                    <div className="text-xs text-slate-400 flex items-center gap-2">
-                                        <span className="bg-slate-700/50 px-1.5 rounded text-[10px]">股數 {p.shares.toLocaleString()}</span>
-                                        <span className="bg-slate-700/50 px-1.5 rounded text-[10px]">現價 ${p.currentPrice}</span>
-                                    </div>
-                                    {p.dividendYield && (
-                                        <div className="flex items-center gap-1 mt-1.5">
-                                            <Landmark size={10} className="text-amber-500"/>
-                                            <span className="text-[10px] text-amber-400 font-medium">
-                                                {p.dividendYield}% ({p.dividendFrequency})
-                                            </span>
+                                    <td className="p-3 text-right">
+                                        <div className="font-mono text-slate-200">{pos.avgCost?.toFixed(2)}</div>
+                                        <div className="text-xs font-mono text-slate-500 flex items-center justify-end gap-1.5">
+                                            {isStale && <span title="資料已過期 (超過14天)"><AlertTriangle size={12} className="text-amber-400" /></span>}
+                                            {pos.currentPrice?.toFixed(2) || '-'}
                                         </div>
-                                    )}
-                                </div>
-
-                                <div className={`text-right ${(p.unrealizedPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    <div className="font-mono font-bold text-sm">
-                                        {(p.unrealizedPL || 0) > 0 ? '+' : ''}{p.unrealizedPL.toLocaleString()}
-                                    </div>
-                                    <div className={`text-[10px] font-bold mt-0.5 inline-block px-1.5 rounded ${
-                                        (p.unrealizedPL || 0) >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'
-                                    }`}>
-                                            {p.returnRate ? `${p.returnRate}%` : (
-                                            `${((p.unrealizedPL / (p.marketValue - p.unrealizedPL)) * 100).toFixed(2)}%`
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </>
-        )}
-    </div>
-  );
+                                    </td>
+                                    <td className="p-3 text-right font-mono text-slate-300 hidden lg:table-cell">{pos.shares?.toLocaleString()}</td>
+                                    <td className="p-3 text-right">
+                                        <div className="font-mono font-bold text-white">{performance.marketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                                        <div className="text-xs font-mono text-slate-500">({weight.toFixed(1)}%)</div>
+                                    </td>
+                                    <td className="p-3 text-right">
+                                        <div className={`font-mono font-bold ${isGain ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                            {performance.netProfit.toLocaleString(undefined, { signDisplay: 'always', maximumFractionDigits: 0 })}
+                                        </div>
+                                        <div className={`text-xs font-mono ${isGain ? 'text-rose-500/80' : 'text-emerald-500/80'}`}>
+                                            ({performance.roi.toFixed(2)}%)
+                                        </div>
+                                    </td>
+                                    <td className="p-3 text-right hidden sm:table-cell">
+                                        <div className="text-xs font-mono text-slate-500">{formatDate(pos.lastUpdated)}</div>
+                                    </td>
+                                    <td className="p-3 text-center">
+                                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {isStale && !isEnriching && (
+                                                <button onClick={() => onEnrichSingle(pos.id)} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-md" title="AI 更新此筆">
+                                                    <RefreshCw size={12} />
+                                                </button>
+                                            )}
+                                            <button onClick={() => onEdit(pos)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md" title="編輯">
+                                                <Edit2 size={12} />
+                                            </button>
+                                            <button onClick={() => onDelete(pos.id)} className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md" title="刪除">
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+                {inventory.length === 0 && (
+                    <div className="text-center py-16 text-slate-500 text-sm">
+                        尚無庫存資料
+                        <p className="text-xs mt-1">請使用「新增持股」功能新增</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };

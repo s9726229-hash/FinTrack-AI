@@ -45,12 +45,14 @@ export const AddTransactionModal: React.FC<TransactionFormModalProps> = ({ isOpe
   const handleAIAnalyze = async () => {
     if(!aiInputText.trim()) return;
     setIsAnalyzing(true);
-    const result = await parseTransactionInput(aiInputText);
-    if (result) {
+    // FIX: `parseTransactionInput` returns an array. Use the first result to populate the form.
+    const results = await parseTransactionInput(aiInputText);
+    if (results && results.length > 0) {
+        const firstResult = results[0];
         setFormData({
             ...formData,
-            ...result,
-            date: result.date || new Date().toISOString().split('T')[0]
+            ...firstResult,
+            date: firstResult.date || new Date().toISOString().split('T')[0]
         });
         setActiveTab('MANUAL'); 
     } else {

@@ -1,42 +1,75 @@
-
 import React from 'react';
 import { Card } from '../ui';
-import { DollarSign, Activity } from 'lucide-react';
-import { StockSnapshot } from '../../types';
+import { Wallet, TrendingUp, TrendingDown, Percent, Info, AlertTriangle } from 'lucide-react';
 
 interface InvestmentStatsProps {
-  currentSnapshot: StockSnapshot | null;
+    stats: {
+        totalMarketValue: number;
+        totalPL: number;
+        totalPLPercent: number;
+    };
+    isDataStale: boolean;
 }
 
-export const InvestmentStats: React.FC<InvestmentStatsProps> = ({ currentSnapshot }) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-violet-500/10 to-slate-800 border-violet-500/20 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl"></div>
-            <div className="text-slate-400 text-xs font-bold uppercase mb-1 flex items-center gap-1 relative z-10">
-                <DollarSign size={14}/> 證券總市值 (Market Value)
+const StatCard = ({ title, value, icon: Icon, colorClass, isCurrency = true, tooltip, staleTooltip }: any) => (
+    <Card className={`p-4 bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-current transition-colors ${colorClass} ${staleTooltip ? 'border-amber-500/30' : ''}`}>
+        <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-1.5">
+                <span className={`text-xs font-bold uppercase`}>{title}</span>
+                {tooltip && (
+                    <div title={tooltip} className="cursor-help">
+                        <Info size={12} className="text-slate-500" />
+                    </div>
+                )}
+                {staleTooltip && (
+                    <div title={staleTooltip} className="cursor-help">
+                        <AlertTriangle size={12} className="text-amber-400 animate-pulse" />
+                    </div>
+                )}
             </div>
-            <div className="text-4xl font-bold text-white font-mono tracking-tight relative z-10">
-                ${currentSnapshot?.totalMarketValue.toLocaleString() || '0'}
-            </div>
-            <div className="text-xs text-slate-500 mt-2 relative z-10 flex items-center gap-1">
-                最後更新：<span className="text-slate-400">{currentSnapshot?.date || '尚無資料'}</span>
-            </div>
-        </Card>
+            <Icon size={16} />
+        </div>
+        <div className={`text-2xl font-bold font-mono`}>
+            {isCurrency && (value > 0 ? '+' : value < 0 ? '' : '')}
+            {isCurrency ? `$${isCurrency && value < 0 ? Math.abs(value).toLocaleString() : value.toLocaleString()}` : `${value.toFixed(2)}%`}
+        </div>
+    </Card>
+);
 
-        <Card className="bg-slate-800 border-slate-700 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
-            <div className="text-slate-400 text-xs font-bold uppercase mb-1 flex items-center gap-1 relative z-10">
-                <Activity size={14}/> 未實現損益 (Unrealized P/L)
-            </div>
-            <div className={`text-4xl font-bold font-mono tracking-tight relative z-10 ${(currentSnapshot?.totalUnrealizedPL || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {(currentSnapshot?.totalUnrealizedPL || 0) > 0 ? '+' : ''}
-                ${currentSnapshot?.totalUnrealizedPL.toLocaleString() || '0'}
-            </div>
-            <div className="text-xs text-slate-500 mt-2 relative z-10">
-                帳面預估獲利
-            </div>
-        </Card>
-    </div>
-  );
+export const InvestmentStats: React.FC<InvestmentStatsProps> = ({ stats, isDataStale }) => {
+    // 正紅負綠
+    const isGain = stats.totalPL >= 0;
+    const colorClass = isGain ? 'text-rose-400' : 'text-emerald-400';
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="p-4 bg-gradient-to-br from-primary/20 to-slate-800 border-primary/30">
+                <div className="flex justify-between items-start mb-2">
+                    <span className="text-primary-300 text-xs font-bold uppercase">總市值</span>
+                    <Wallet size={16} className="text-primary"/>
+                </div>
+                <div className="text-2xl font-bold font-mono text-white">
+                    ${stats.totalMarketValue.toLocaleString()}
+                </div>
+            </Card>
+
+            <StatCard 
+                title="總損益"
+                value={stats.totalPL}
+                icon={isGain ? TrendingUp : TrendingDown}
+                colorClass={colorClass}
+                tooltip="已扣除預估手續費與證交稅"
+                staleTooltip={isDataStale ? "部分數據已過期，可能影響損益精確度" : null}
+            />
+
+            <StatCard 
+                title="總報酬率"
+                value={stats.totalPLPercent}
+                icon={Percent}
+                colorClass={colorClass}
+                isCurrency={false}
+                staleTooltip={isDataStale ? "部分數據已過期，可能影響損益精確度" : null}
+            />
+        </div>
+    );
 };

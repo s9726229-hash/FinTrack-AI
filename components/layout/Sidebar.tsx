@@ -1,15 +1,17 @@
 
+
 import React from 'react';
 import { ViewState, ApiKeyStatus } from '../../types';
 import { 
-  LayoutGrid, PieChart, ScrollText, Target, CalendarClock, TrendingUp, 
-  Bot, Settings, BookOpen
+  LayoutGrid, PieChart, ScrollText, Target, CalendarClock,
+  Bot, Settings, BookOpen, TrendingUp, Loader2
 } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
   apiKeyStatus: ApiKeyStatus;
+  isEnrichingInBackground: boolean;
 }
 
 const ApiKeyStatusIndicator = ({ status }: { status: ApiKeyStatus }) => {
@@ -30,27 +32,30 @@ const ApiKeyStatusIndicator = ({ status }: { status: ApiKeyStatus }) => {
 };
 
 const NavItem = ({ 
-  view, current, icon: Icon, label, onClick 
+  view, current, icon: Icon, label, onClick, loading = false
 }: { 
-  view: ViewState; current: ViewState; icon: any; label: string; onClick: (v: ViewState) => void 
+  view: ViewState; current: ViewState; icon: any; label: string; onClick: (v: ViewState) => void; loading?: boolean 
 }) => {
   const isActive = view === current;
   return (
     <button
       onClick={() => onClick(view)}
-      className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-200 ${
+      className={`flex items-center justify-between w-full p-3 rounded-xl transition-all duration-200 ${
         isActive 
           ? 'bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]' 
           : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100 border border-transparent'
       }`}
     >
-      <Icon size={20} />
-      <span className="font-medium tracking-wide">{label}</span>
+      <div className="flex items-center gap-3">
+        <Icon size={20} />
+        <span className="font-medium tracking-wide">{label}</span>
+      </div>
+      {loading && <Loader2 size={16} className="animate-spin text-slate-400" />}
     </button>
   );
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, apiKeyStatus }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, apiKeyStatus, isEnrichingInBackground }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 p-6 border-r border-slate-800 h-screen sticky top-0 bg-[#0f172a] shrink-0">
       <div className="flex items-center gap-3 mb-10 px-2">
@@ -62,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, api
             FinTrack AI
           </h1>
           <div className="flex items-center">
-            <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">V5.7.1</span>
+            <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">V6.6.0</span>
             <ApiKeyStatusIndicator status={apiKeyStatus} />
           </div>
         </div>
@@ -71,10 +76,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, api
       <nav className="flex-1 space-y-2">
         <NavItem view="DASHBOARD" current={currentView} icon={LayoutGrid} label="總覽儀表板" onClick={onChangeView} />
         <NavItem view="ASSETS" current={currentView} icon={PieChart} label="資產管理" onClick={onChangeView} />
+        <NavItem view="INVESTMENTS" current={currentView} icon={TrendingUp} label="股票投資" onClick={onChangeView} loading={isEnrichingInBackground} />
         <NavItem view="TRANSACTIONS" current={currentView} icon={ScrollText} label="收支記帳" onClick={onChangeView} />
         <NavItem view="BUDGET" current={currentView} icon={Target} label="預算與分析" onClick={onChangeView} />
         <NavItem view="RECURRING" current={currentView} icon={CalendarClock} label="固定收支" onClick={onChangeView} />
-        <NavItem view="INVESTMENTS" current={currentView} icon={TrendingUp} label="股票投資" onClick={onChangeView} />
         
         <div className="pt-4 mt-2 border-t border-slate-800 space-y-2">
           <NavItem view="GUIDE" current={currentView} icon={BookOpen} label="功能導覽" onClick={onChangeView} />

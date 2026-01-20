@@ -13,7 +13,7 @@ import { ViewState, Asset, Transaction, RecurringItem, AssetType, BudgetConfig, 
 import * as storage from './services/storage';
 import { verifyApiKey } from './services/gemini';
 import { calculateLoanBalance } from './services/finance';
-import { enrichStockData } from './services/stock';
+import { enrichStockData, calculateStockPerformance } from './services/stock';
 import { CheckCircle2, X } from 'lucide-react';
 import { VoiceInputFab } from './components/VoiceInputFab';
 
@@ -185,30 +185,49 @@ export default function App() {
   }, []);
 
   const takeStockSnapshot = useCallback((currentAssets: Asset[]) => {
-      const stocks = currentAssets.filter(a => a.type === AssetType.STOCK);
-      if (stocks.length === 0) {
-          // If no stocks, ensure today's snapshot doesn't exist or is 0
-          const history = storage.getStockHistory();
-          const today = new Date().toISOString().split('T')[0];
-          if (history.some(h => h.date === today && h.totalMarketValue !== 0)) {
-              const snapshot = { date: today, totalMarketValue: 0 };
-              const filteredHistory = history.filter(h => h.date !== today);
-              filteredHistory.push(snapshot);
-              storage.saveStockHistory(filteredHistory);
-              setStockHistory(filteredHistory);
-          }
-          return;
-      }
-      
-      const totalMarketValue = stocks.reduce((sum, s) => sum + (s.currentPrice && s.shares ? s.currentPrice * s.shares : s.amount), 0);
-      const snapshot = { date: new Date().toISOString().split('T')[0], totalMarketValue };
-      const history = storage.getStockHistory();
-      const today = snapshot.date;
-      const filteredHistory = history.filter(h => h.date !== today);
-      filteredHistory.push(snapshot);
-      if (filteredHistory.length > 365) filteredHistory.shift();
-      storage.saveStockHistory(filteredHistory);
-      setStockHistory(filteredHistory);
+    const stocks = currentAssets.filter(a => a.type === AssetType.STOCK);
+    const today = new Date().toISOString().split('T')[0];
+    const history = storage.getStockHistory();
+
+    let snapshot: StockSnapshot;
+
+    if (stocks.length === 0) {
+      snapshot = {
+        date: today,
+        totalMarketValue: 0,
+        totalUnrealizedPL: 0,
+        positions: [],
+      };
+    } else {
+      let totalMarketValue = 0;
+      let totalUnrealizedPL = 0;
+      const positions: { symbol: string; marketValue: number }[] = [];
+
+      stocks.forEach(stock => {
+        if (stock.symbol) {
+          const performance = calculateStockPerformance(stock);
+          totalMarketValue += performance.marketValue;
+          totalUnrealizedPL += performance.netProfit;
+          positions.push({
+            symbol: stock.symbol,
+            marketValue: performance.marketValue,
+          });
+        }
+      });
+
+      snapshot = {
+        date: today,
+        totalMarketValue,
+        totalUnrealizedPL,
+        positions,
+      };
+    }
+
+    const filteredHistory = history.filter(h => h.date !== today);
+    filteredHistory.push(snapshot);
+    if (filteredHistory.length > 365) filteredHistory.shift();
+    storage.saveStockHistory(filteredHistory);
+    setStockHistory(filteredHistory);
   }, []);
 
   useEffect(() => {

@@ -16,6 +16,15 @@ interface AssetListProps {
 export const AssetList: React.FC<AssetListProps> = ({ 
   filteredAssets, filterType, setFilterType, onEdit, onDelete, calculateDaysSinceUpdate 
 }) => {
+  const formatDate = (timestamp: number | undefined) => {
+    if (!timestamp) return '-';
+    try {
+        return new Date(timestamp).toLocaleDateString('sv-SE'); // YYYY-MM-DD
+    } catch {
+        return '-';
+    }
+  };
+
   return (
     <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
          <div className="flex items-center gap-2 p-4 border-b border-slate-700 bg-slate-800/50 overflow-x-auto no-scrollbar">
@@ -46,6 +55,7 @@ export const AssetList: React.FC<AssetListProps> = ({
                         <th className="p-4 font-medium">資產名稱</th>
                         <th className="p-4 font-medium hidden md:table-cell">類別</th>
                         <th className="p-4 font-medium text-right">金額 (TWD)</th>
+                        <th className="p-4 font-medium text-right hidden sm:table-cell">最後更新</th>
                         <th className="p-4 font-medium text-center">操作</th>
                     </tr>
                 </thead>
@@ -61,7 +71,7 @@ export const AssetList: React.FC<AssetListProps> = ({
                                         <div>
                                             <div className="font-bold text-white text-sm flex items-center gap-2">
                                                 {asset.name}
-                                                {isStale && asset.type !== AssetType.DEBT && <span title="資料過期"><AlertCircle size={14} className="text-amber-500 animate-pulse" /></span>}
+                                                {isStale && asset.type !== AssetType.DEBT && <span title="資料已超過14天未更新"><AlertCircle size={14} className="text-amber-500" /></span>}
                                             </div>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <span className="md:hidden px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[9px] text-slate-400">
@@ -85,6 +95,9 @@ export const AssetList: React.FC<AssetListProps> = ({
                                     <div className={`font-mono font-bold ${asset.type === AssetType.DEBT ? 'text-red-400' : 'text-emerald-400'}`}>
                                         ${asset.amount.toLocaleString()}
                                     </div>
+                                </td>
+                                <td className="p-4 text-right hidden sm:table-cell">
+                                    <div className="text-xs font-mono text-slate-500">{formatDate(asset.lastUpdated)}</div>
                                 </td>
                                 <td className="p-4 text-center">
                                     <div className="flex items-center justify-center gap-2">

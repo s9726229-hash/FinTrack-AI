@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Input } from '../ui';
 import { Calendar, Search } from 'lucide-react';
 
-export type TimeRange = 'THIS_WEEK' | 'THIS_MONTH' | 'LAST_90_DAYS' | 'CUSTOM';
+export type TimeRange = 'MONTH' | 'QUARTER' | 'HALF_YEAR' | 'YEAR' | 'ALL' | 'CUSTOM';
 
 interface TransactionFiltersProps {
   filter: string;
@@ -16,6 +15,15 @@ interface TransactionFiltersProps {
   customEnd: string;
   setCustomEnd: (val: string) => void;
 }
+
+const timeRangeOptions: { value: TimeRange; label: string }[] = [
+    { value: 'MONTH', label: '月' },
+    { value: 'QUARTER', label: '季' },
+    { value: 'HALF_YEAR', label: '半年' },
+    { value: 'YEAR', label: '年度' },
+    { value: 'ALL', label: '全部' },
+    { value: 'CUSTOM', label: '自定義' },
+];
 
 export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   filter, setFilter,
@@ -37,21 +45,23 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                  onChange={e => setFilter(e.target.value)}
               />
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            {(['THIS_WEEK', 'THIS_MONTH', 'LAST_90_DAYS', 'CUSTOM'] as TimeRange[]).map((r) => (
-                <button
-                    key={r}
-                    onClick={() => setTimeRange(r)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
-                        timeRange === r 
-                        ? 'bg-slate-700 text-white ring-1 ring-slate-500 shadow-sm' 
-                        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
-                    }`}
-                >
-                    {r === 'THIS_WEEK' ? '本週' : r === 'THIS_MONTH' ? '本月' : r === 'LAST_90_DAYS' ? '近90天' : '自訂'}
-                </button>
-            ))}
-            <div className="ml-auto text-[10px] text-slate-500 font-mono whitespace-nowrap flex items-center bg-slate-900 px-2 py-1 rounded border border-slate-800">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 flex-wrap">
+            <div className="flex items-center gap-2">
+              {timeRangeOptions.map((opt) => (
+                  <button
+                      key={opt.value}
+                      onClick={() => setTimeRange(opt.value)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
+                          timeRange === opt.value 
+                          ? 'bg-slate-700 text-white ring-1 ring-slate-500 shadow-sm' 
+                          : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
+                      }`}
+                  >
+                      {opt.label}
+                  </button>
+              ))}
+            </div>
+            <div className="ml-auto text-[10px] text-slate-500 font-mono whitespace-nowrap flex items-center bg-slate-900/80 px-2 py-1 rounded border border-slate-800">
                  <Calendar size={10} className="mr-1.5"/> {dateRangeLabel}
             </div>
         </div>

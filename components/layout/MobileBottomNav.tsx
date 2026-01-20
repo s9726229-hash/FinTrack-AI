@@ -1,7 +1,8 @@
 
+
 import React from 'react';
 import { ViewState } from '../../types';
-import { LayoutGrid, PieChart, ScrollText, CalendarClock, TrendingUp, Target } from 'lucide-react';
+import { LayoutGrid, PieChart, ScrollText, CalendarClock, Target, TrendingUp } from 'lucide-react';
 
 interface MobileBottomNavProps {
   currentView: ViewState;
@@ -36,10 +37,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ currentView, o
       <div className="grid grid-cols-6 h-16">
         <NavItemMobile view="DASHBOARD" current={currentView} icon={LayoutGrid} onClick={onChangeView} />
         <NavItemMobile view="ASSETS" current={currentView} icon={PieChart} onClick={onChangeView} />
-        <NavItemMobile view="TRANSACTIONS" current={currentView} icon={ScrollText} onClick={onChangeView} />
-        <NavItemMobile view="BUDGET" current={currentView} icon={Target} onClick={onChangeView} />
-        <NavItemMobile view="RECURRING" current={currentView} icon={CalendarClock} onClick={onChangeView} />
         <NavItemMobile view="INVESTMENTS" current={currentView} icon={TrendingUp} onClick={onChangeView} />
+        <NavItemMobile view="TRANSACTIONS" current={currentView} icon={ScrollText} onClick={onChangeView} />
+        <NavItemMobile view="RECURRING" current={currentView} icon={CalendarClock} onClick={onChangeView} />
+        <NavItemMobile view="BUDGET" current={currentView} icon={Target} onClick={onChangeView} />
       </div>
     </div>
   );

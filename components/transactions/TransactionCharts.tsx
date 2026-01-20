@@ -23,7 +23,6 @@ const CATEGORY_STYLE: Record<string, { color: string, icon: any }> = {
   '醫療': { color: 'bg-emerald-500', icon: Stethoscope },
   '教育': { color: 'bg-indigo-500', icon: GraduationCap },
   '家庭': { color: 'bg-orange-500', icon: Users },
-  '投資': { color: 'bg-violet-500', icon: LineChart },
   'default': { color: 'bg-slate-600', icon: MoreHorizontal }
 };
 

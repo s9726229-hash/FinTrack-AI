@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Transaction } from '../types';
 import { 
@@ -39,7 +38,7 @@ interface ImportStats {
 
 export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd, onUpdate, onDelete }) => {
   const [filter, setFilter] = useState('');
-  const [timeRange, setTimeRange] = useState<TimeRange>('THIS_MONTH');
+  const [timeRange, setTimeRange] = useState<TimeRange>('MONTH');
   const [showCharts, setShowCharts] = useState(false);
   
   // Custom Date Range State
@@ -63,92 +62,107 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAdd,
 
   const hasApiKey = !!getApiKey();
 
-  // --- Unified Data Processing ---
-  const { filteredTransactions, rangeStats, dailyTrendData, expenseStructure, dateRangeLabel } = useMemo(() => {
+  // --- V6.5.0 Refactored Data Processing ---
+  const { filteredTransactions, dateRangeLabel } = useMemo(() => {
     const now = new Date();
     let startDate = new Date();
-    let endDate = new Date();
+    let endDate = new Date(now);
 
-    const formatDate = (d: Date) => `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}`;
+    const formatDate = (d: Date) => `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
 
-    if (timeRange === 'THIS_WEEK') {
-        const day = now.getDay() || 7; 
-        if (day !== 1) startDate.setDate(now.getDate() - day + 1);
-        const endOfWeek = new Date(startDate);
-        endOfWeek.setDate(startDate.getDate() + 6);
-        endDate = endOfWeek;
-    } 
-    else if (timeRange === 'THIS_MONTH') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    } 
-    else if (timeRange === 'LAST_90_DAYS') {
-        startDate = new Date();
-        startDate.setDate(now.getDate() - 90);
-        endDate = new Date();
-    } 
-    else if (timeRange === 'CUSTOM') {
-        startDate = customStart ? new Date(customStart) : new Date(now.getFullYear(), now.getMonth(), 1); 
-        endDate = customEnd ? new Date(customEnd) : new Date(); 
+    switch (timeRange) {
+        case 'MONTH':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'QUARTER':
+            const quarter = Math.floor(now.getMonth() / 3);
+            startDate = new Date(now.getFullYear(), quarter * 3, 1);
+            endDate = new Date(now.getFullYear(), quarter * 3 + 3, 0);
+            break;
+        case 'HALF_YEAR':
+            const half = Math.floor(now.getMonth() / 6); // 0 for H1, 1 for H2
+            startDate = new Date(now.getFullYear(), half * 6, 1);
+            endDate = new Date(now.getFullYear(), half * 6 + 6, 0);
+            break;
+        case 'YEAR':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            endDate = new Date(now.getFullYear(), 11, 31);
+            break;
+        case 'CUSTOM':
+            startDate = customStart ? new Date(customStart) : new Date(0);
+            endDate = customEnd ? new Date(customEnd) : new Date();
+            break;
+        case 'ALL':
+            startDate = new Date(0); // 1970/01/01
+            endDate = new Date(); // Today
+            break;
     }
 
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
-
-    const dateRangeLabel = `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+    
+    const label = timeRange === 'ALL'
+        ? '所有紀錄'
+        : `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
 
     const processedTransactions = transactions.filter(t => {
         if (!t.date) return false;
+        
         const tDate = new Date(t.date);
-        const tDateMidnight = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate());
-        if (tDateMidnight < startDate || tDateMidnight > endDate) return false;
+        if (tDate < startDate || tDate > endDate) return false;
+
         if (filter) {
             const lowerFilter = filter.toLowerCase();
             return t.item.toLowerCase().includes(lowerFilter) || t.category.toLowerCase().includes(lowerFilter);
         }
         return true;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
+    
+    return { filteredTransactions: processedTransactions, dateRangeLabel: label };
+  }, [transactions, timeRange, customStart, customEnd, filter]);
+  
+  // Layer 2: Calculate aggregate stats based on filtered data.
+  const rangeStats = useMemo(() => {
     let income = 0;
     let expense = 0;
+    filteredTransactions.forEach(t => {
+      if (t.type === 'INCOME') income += t.amount;
+      else expense += t.amount;
+    });
+    return { income, expense, balance: income - expense };
+  }, [filteredTransactions]);
+  
+  // Layer 3: Format data for charts, also based on filtered data.
+  const { dailyTrendData, expenseStructure } = useMemo(() => {
     const catMap: Record<string, number> = {};
     const dailyMap: Record<string, { income: number, expense: number }> = {};
 
-    processedTransactions.forEach(t => {
-        if (t.type === 'INCOME') income += t.amount;
-        else {
-            expense += t.amount;
-            catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+    filteredTransactions.forEach(t => {
+        if (t.type === 'EXPENSE') {
+          catMap[t.category] = (catMap[t.category] || 0) + t.amount;
         }
 
-        // Daily Trend Logic
         if (!dailyMap[t.date]) dailyMap[t.date] = { income: 0, expense: 0 };
         if (t.type === 'INCOME') dailyMap[t.date].income += t.amount;
         else dailyMap[t.date].expense += t.amount;
     });
-
-    // Format Trend Data (Sorted by Date Ascending)
-    const dailyTrendData = Object.keys(dailyMap).sort().map(date => ({
+    
+    const trendData = Object.keys(dailyMap).sort().map(date => ({
         day: date.substring(5), // MM-DD
         income: dailyMap[date].income,
         expense: dailyMap[date].expense
     }));
-
-    // Format Expense Structure (Sorted by Value Descending)
-    const expenseStructure = Object.keys(catMap).map(cat => ({
+    
+    const totalExpense = rangeStats.expense;
+    const structureData = Object.keys(catMap).map(cat => ({
         name: cat,
         value: catMap[cat],
-        percent: expense > 0 ? (catMap[cat] / expense) * 100 : 0
+        percent: totalExpense > 0 ? (catMap[cat] / totalExpense) * 100 : 0
     })).sort((a, b) => b.value - a.value);
 
-    return {
-        filteredTransactions: processedTransactions,
-        rangeStats: { income, expense, balance: income - expense },
-        dailyTrendData,
-        expenseStructure,
-        dateRangeLabel
-    };
-  }, [transactions, timeRange, customStart, customEnd, filter]); 
+    return { dailyTrendData: trendData, expenseStructure: structureData };
+  }, [filteredTransactions, rangeStats.expense]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

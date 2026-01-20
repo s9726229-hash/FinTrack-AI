@@ -1,13 +1,14 @@
 
+
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Card, Button } from '../components/ui';
-import { Asset, Transaction, AssetType, StockSnapshot, AIReportData, RecurringItem } from '../types';
+import { Asset, Transaction, AssetType, AIReportData, RecurringItem } from '../types';
 import { generateFinancialReport } from '../services/gemini';
 import { getApiKey } from '../services/storage';
 import { 
     Sparkles, TrendingUp, AlertTriangle, ArrowRight, Wallet, CreditCard, 
-    BarChart3, Activity, Briefcase, AlertCircle 
+    BarChart3, Activity, Briefcase, AlertCircle, Info
 } from 'lucide-react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine
@@ -16,11 +17,10 @@ import {
 interface DashboardProps {
   assets: Asset[];
   transactions: Transaction[];
-  stockSnapshots: StockSnapshot[];
   recurring: RecurringItem[]; // New Prop V5.2
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stockSnapshots, recurring }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, recurring }) => {
   const [reportData, setReportData] = useState<AIReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [netWorth, setNetWorth] = useState(0);
@@ -48,14 +48,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
   }, [assets]);
 
   const handleGenerateReport = async () => {
-    setLoading(true);
-    // Get latest stock positions
-    const currentStocks = stockSnapshots.length > 0 ? stockSnapshots[stockSnapshots.length - 1].positions : [];
-    const result = await generateFinancialReport(assets, transactions, currentStocks, recurring);
-    if (result) {
-        setReportData(result);
-    }
-    setLoading(false);
+    // V5.9.1 - AI Feature temporarily disabled for re-evaluation
+    // setLoading(true);
+    // const result = await generateFinancialReport(assets, transactions, recurring);
+    // if (result) {
+    //     setReportData(result);
+    // }
+    // setLoading(false);
   };
 
   const hasRecordedToday = transactions.some(t => t.date === new Date().toISOString().split('T')[0]);
@@ -129,17 +128,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                </div>
                <div>
                   <h3 className="text-lg font-bold text-white">AI 財務精算師</h3>
-                  <p className="text-xs text-slate-400">Gemini 2.5 • 現金流壓力測試與投資策略整合</p>
+                  <p className="text-xs text-slate-400">Gemini 2.5 • 現金流壓力測試與債務管理</p>
                </div>
             </div>
             <Button 
                 variant="primary" 
                 onClick={handleGenerateReport} 
-                disabled={loading || !hasApiKey}
-                loading={loading} 
-                className="w-full md:w-auto bg-cyan-600 hover:bg-cyan-500 shadow-cyan-900/20 disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-400"
+                disabled={true}
+                title="此功能將於股票模組完善後重新規劃"
+                className="w-full md:w-auto bg-slate-700 hover:bg-slate-600 shadow-none disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-400"
             >
-              {hasApiKey ? (reportData ? '重新演算' : '啟動壓力測試') : '請先設定 API Key'} {hasApiKey && <ArrowRight size={16}/>}
+              AI 分析 (規劃中)
             </Button>
           </div>
           
@@ -229,67 +228,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ assets, transactions, stoc
                       </div>
                   </div>
 
-                  {/* Strategy Cards - Equal Height */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Investment Strategy */}
-                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700 h-full flex flex-col">
-                          <h4 className="text-sm font-bold text-violet-400 mb-3 flex items-center gap-2">
-                              <Briefcase size={16}/> 投資組合調整建議
-                          </h4>
-                          <div className="space-y-3 flex-1">
-                              {reportData.investmentSuggestions.map((sug, idx) => (
-                                  <div key={idx} className="flex gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                                      <div className={`
-                                          text-xs font-bold px-2 py-1 h-fit rounded
-                                          ${sug.action === 'SELL' ? 'bg-red-500/20 text-red-400' : sug.action === 'BUY' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-600 text-slate-300'}
-                                      `}>
-                                          {sug.action === 'SELL' ? '建議賣出' : sug.action === 'BUY' ? '建議買入' : '續抱'}
-                                      </div>
-                                      <div>
-                                          <p className="text-sm font-bold text-white mb-1">{sug.target}</p>
-                                          <p className="text-xs text-slate-400">{sug.reason}</p>
-                                      </div>
+                  {/* Debt Analysis */}
+                  <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700 h-full flex flex-col">
+                      <h4 className="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2">
+                          <AlertCircle size={16}/> 負債管理建議
+                      </h4>
+                      <div className="space-y-3 flex-1">
+                          {reportData.debtAnalysis.map((debt, idx) => (
+                              <div key={idx} className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                                  <div className="flex justify-between items-start mb-1">
+                                      <span className="text-sm font-bold text-white">{debt.name}</span>
+                                      <span className="text-[10px] bg-slate-700 px-1.5 rounded text-slate-300">{debt.status}</span>
                                   </div>
-                              ))}
-                              {reportData.investmentSuggestions.length === 0 && (
-                                  <div className="text-center py-6 text-slate-500 text-xs">
-                                      目前投資組合穩健，暫無具體調整建議。
-                                  </div>
-                              )}
-                          </div>
-                      </div>
-
-                      {/* Debt Analysis */}
-                      <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700 h-full flex flex-col">
-                          <h4 className="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2">
-                              <AlertCircle size={16}/> 負債管理建議
-                          </h4>
-                          <div className="space-y-3 flex-1">
-                              {reportData.debtAnalysis.map((debt, idx) => (
-                                  <div key={idx} className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                                      <div className="flex justify-between items-start mb-1">
-                                          <span className="text-sm font-bold text-white">{debt.name}</span>
-                                          <span className="text-[10px] bg-slate-700 px-1.5 rounded text-slate-300">{debt.status}</span>
-                                      </div>
-                                      <p className="text-xs text-slate-400">{debt.suggestion}</p>
-                                  </div>
-                              ))}
-                              {reportData.debtAnalysis.length === 0 && (
-                                  <div className="text-center py-6 text-slate-500 text-xs">
-                                      目前無重大負債風險，請繼續保持。
-                                  </div>
-                              )}
-                          </div>
+                                  <p className="text-xs text-slate-400">{debt.suggestion}</p>
+                              </div>
+                          ))}
+                          {reportData.debtAnalysis.length === 0 && (
+                              <div className="text-center py-6 text-slate-500 text-xs">
+                                  目前無重大負債風險，請繼續保持。
+                              </div>
+                          )}
                       </div>
                   </div>
 
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full py-16 text-slate-500 gap-4 opacity-60">
+              <div className="flex flex-col items-center justify-center h-full py-10 text-slate-500 gap-4 opacity-60">
                 <Sparkles size={64} className="animate-pulse duration-[3s] text-cyan-500/50"/>
                 <div className="text-center max-w-md">
-                    <p className="text-lg font-medium text-slate-300 mb-2">點擊上方按鈕啟動分析</p>
-                    <p className="text-sm">Gemini AI 將整合您的負債結構與持股配置，模擬未來寬限期結束後的現金流衝擊，並提供具體的資產配置調整建議。</p>
+                    <p className="text-lg font-medium text-slate-300 mb-2">AI 分析功能重新規劃中</p>
+                    <p className="text-sm">此功能將在股票模組整合後，提供更全面的財務洞見。敬請期待！</p>
                 </div>
               </div>
             )}

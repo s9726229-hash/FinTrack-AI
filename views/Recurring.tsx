@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button, Modal, Input, Select } from '../components/ui';
@@ -108,12 +109,12 @@ export const Recurring: React.FC<RecurringProps> = ({ items, executedLog, onAdd,
   };
 
   const handleDeepScan = async () => {
-      // API Key Check moved to disabled state
-      setIsAnalyzing(true);
-      const res = await analyzeRecurringHealth(items);
-      setReport(res);
-      setIsReportOpen(true);
-      setIsAnalyzing(false);
+      // V5.9.1 - AI Feature temporarily disabled for re-evaluation
+      // setIsAnalyzing(true);
+      // const res = await analyzeRecurringHealth(items);
+      // setReport(res);
+      // setIsReportOpen(true);
+      // setIsAnalyzing(false);
   };
 
   return (
@@ -189,11 +190,12 @@ export const Recurring: React.FC<RecurringProps> = ({ items, executedLog, onAdd,
              <Button 
                 variant="primary" 
                 onClick={handleDeepScan}
-                disabled={!hasApiKey || isAnalyzing}
+                disabled={true}
                 loading={isAnalyzing}
-                className="w-full bg-cyan-600 hover:bg-cyan-500 border border-cyan-400/30 shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:bg-slate-700 disabled:border-slate-600 disabled:shadow-none disabled:text-slate-400"
+                title="此功能將於股票模組完善後重新規劃"
+                className="w-full bg-slate-700 hover:bg-slate-600 border-none shadow-none disabled:bg-slate-700 disabled:border-slate-600 disabled:shadow-none disabled:text-slate-400"
              >
-                <PiggyBank size={18} /> {hasApiKey ? "Gemini 深度健檢" : "請先設定 API Key"}
+                <PiggyBank size={18} /> AI 健檢 (規劃中)
              </Button>
           </div>
           <div className="absolute left-0 bottom-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-primary opacity-50"></div>

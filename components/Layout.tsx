@@ -10,14 +10,15 @@ interface LayoutProps {
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
   apiKeyStatus: ApiKeyStatus;
+  isEnrichingInBackground: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeView, apiKeyStatus }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeView, apiKeyStatus, isEnrichingInBackground }) => {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col md:flex-row font-sans">
       
       {/* Desktop Sidebar */}
-      <Sidebar currentView={currentView} onChangeView={onChangeView} apiKeyStatus={apiKeyStatus} />
+      <Sidebar currentView={currentView} onChangeView={onChangeView} apiKeyStatus={apiKeyStatus} isEnrichingInBackground={isEnrichingInBackground} />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">

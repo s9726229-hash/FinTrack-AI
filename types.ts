@@ -1,5 +1,6 @@
 
 
+
 export enum Currency {
   TWD = 'TWD',
   USD = 'USD',
@@ -118,6 +119,11 @@ export interface PortfolioSnapshot {
 export interface StockSnapshot {
   date: string; // YYYY-MM-DD
   totalMarketValue: number;
+  totalUnrealizedPL: number;
+  positions: {
+    symbol: string;
+    marketValue: number;
+  }[];
 }
 
 export interface StockPerformanceResult {
@@ -146,6 +152,11 @@ export interface AIReportData {
     suggestion: string;
   }[];
   summary: string;
+  investmentSuggestions?: {
+    symbol: string;
+    suggestion: 'HOLD' | 'SELL' | 'BUY_MORE';
+    reason: string;
+  }[];
 }
 
 export interface GoogleSyncConfig {
