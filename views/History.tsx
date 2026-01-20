@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil, Wifi, Layers, CircleDot, MessageSquareText, Camera, Zap, FileSearch, Trash2, TrendingUp, Calculator, GitMerge, UserCheck, Code, Scissors, Timer, Download, RefreshCw, Rocket, AppWindow, Columns, Paintbrush, SlidersHorizontal, Split, Gauge, LayoutGrid, Key, Filter, ClipboardList, MicVocal } from 'lucide-react';
+import { Bot, GitCommit, Clock, CheckCircle2, FlaskConical, Bug, Wrench, CalendarCheck, Info, BookOpen, ListTree, LayoutPanelLeft, GitBranch, PlusCircle, FileText, Tags, FileUp, Sparkles, ShieldCheck, BrainCircuit, FilePenLine, Edit, Pointer, Pencil, Wifi, Layers, CircleDot, MessageSquareText, Camera, Zap, FileSearch, Trash2, TrendingUp, Calculator, GitMerge, UserCheck, Code, Scissors, Timer, Download, RefreshCw, Rocket, AppWindow, Columns, Paintbrush, SlidersHorizontal, Split, Gauge, LayoutGrid, Key, Filter, ClipboardList, Mic } from 'lucide-react';
 import { Card } from '../components/ui';
 
 const logs = [
@@ -10,7 +10,7 @@ const logs = [
     status: "verifying",
     changes: [
       {
-        icon: MicVocal,
+        icon: Mic,
         color: 'text-rose-400',
         text: "修復文字重複疊加 Bug，支援**長語音持續辨識**與**多筆交易批次 AI 解析**。"
       }

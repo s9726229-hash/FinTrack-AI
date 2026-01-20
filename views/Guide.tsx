@@ -3,7 +3,7 @@ import {
   BookOpen, Mic, Sparkles, BrainCircuit, Wand2, Calculator, Target, 
   LayoutGrid, PieChart, ScrollText, CalendarClock, Cloud,
   UploadCloud, FilePenLine, Pencil, Wifi, TrendingUp, Zap, Info,
-  Clock, UserCheck, ShieldCheck, GitMerge, Scissors, AppWindow, Columns, Archive, FileSearch, Layers, Paintbrush, Split, ReceiptText, ListTree, ArrowRightLeft, Key, Filter, FileText, GitBranch, ClipboardList, SlidersHorizontal, MicVocal
+  Clock, UserCheck, ShieldCheck, GitMerge, Scissors, AppWindow, Columns, Archive, FileSearch, Layers, Paintbrush, Split, ReceiptText, ListTree, ArrowRightLeft, Key, Filter, FileText, GitBranch, ClipboardList, SlidersHorizontal
 } from 'lucide-react';
 
 const FeatureSection = ({ title, color, children }: { title: string; color: string; children?: React.ReactNode }) => (
@@ -39,7 +39,7 @@ export const GuideView: React.FC = () => {
       <div className="relative border-l-2 border-slate-800 space-y-12">
         <FeatureSection title="V6.6.0 功能 (語音記帳升級)" color="text-rose-400">
             <FeatureItem 
-                icon={MicVocal}
+                icon={Mic}
                 title="智慧流程重構：批次語音記帳" 
                 description="語音記帳導入『先看後記』確認機制，支援長語音持續辨識（例如：早餐50元、午餐120、買咖啡90...），並可一次性解析多筆交易，大幅提升記帳效率與準確度。"
             />

@@ -113,7 +113,7 @@ export const InvestmentChart: React.FC<InvestmentChartProps> = ({ history, alloc
                             <Treemap
                                 data={allocationData}
                                 dataKey="value"
-                                ratio={4 / 3}
+                                aspectRatio={4 / 3}
                                 stroke="#fff"
                                 content={<CustomizedTreemapContent />}
                             />

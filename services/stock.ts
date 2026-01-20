@@ -108,7 +108,7 @@ Return a JSON object with:
             }
         });
 
-        const result = JSON.parse(cleanJsonString(response.text));
+        const result = JSON.parse(cleanJsonString(response.text ?? ""));
 
         return {
             name: result.name || symbol,
@@ -157,7 +157,7 @@ export const parseStockInput = async (input: string): Promise<Partial<Asset>[] |
             }
         });
 
-        let text = cleanJsonString(response.text);
+        let text = cleanJsonString(response.text ?? "");
         if (text === "{}") text = "[]"; // Handle empty default
         
         return JSON.parse(text);
